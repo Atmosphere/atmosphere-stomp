@@ -15,7 +15,7 @@
  */
 
 
-package org.atmosphere.stomp.config;
+package org.atmosphere.stomp.annotation;
 
 import java.lang.annotation.*;
 
