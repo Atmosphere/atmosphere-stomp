@@ -15,20 +15,21 @@
  */
 package org.atmosphere.stomp.annotation;
 
-import org.atmosphere.annotation.Processor;
-import org.atmosphere.config.AtmosphereAnnotation;
-import org.atmosphere.cpr.AsyncSupport;
-import org.atmosphere.cpr.AtmosphereFramework;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-@AtmosphereAnnotation(StompService.class)
-public class StompServiceProcessor implements Processor<AsyncSupport> {
-
-    private static final Logger logger = LoggerFactory.getLogger(StompServiceProcessor.class);
-
-    @Override
-    public void handle(AtmosphereFramework framework, Class<AsyncSupport> annotatedClass) {
-        // TODO: Manipulate the annotated class.
-    }
+/**
+ * Enable Stomp support on an annotated {@link org.atmosphere.config.service.ManagedService}. One or more method
+ * of the annotated class must implement the {@link org.atmosphere.stomp.annotation.StompService} annotation in order
+ * to enable the protocol.
+ *
+ * @author Jeanfrancois Arcand
+ */
+@Target({ElementType.TYPE})
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+public @interface StompEndpoint {
 }
