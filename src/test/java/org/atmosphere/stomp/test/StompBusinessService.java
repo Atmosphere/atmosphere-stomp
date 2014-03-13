@@ -23,7 +23,7 @@ import org.atmosphere.config.service.ManagedService;
 import org.atmosphere.config.service.Message;
 import org.atmosphere.cpr.AtmosphereResource;
 import org.atmosphere.cpr.Broadcaster;
-import org.atmosphere.stomp.config.StompService;
+import org.atmosphere.stomp.annotation.StompService;
 
 import java.util.Date;
 

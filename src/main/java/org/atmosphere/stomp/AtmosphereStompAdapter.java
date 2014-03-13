@@ -66,7 +66,7 @@ public interface AtmosphereStompAdapter {
 
     /**
      * <p>
-     * Invokes the method annotated with {@link org.atmosphere.stomp.config.StompService} inside any
+     * Invokes the method annotated with {@link org.atmosphere.stomp.annotation.StompService} inside any
      * {@link org.atmosphere.config.service.ManagedService} that defines a destination that matched the destination
      * header inside the specified {@link Header headers}.
      * </p>
