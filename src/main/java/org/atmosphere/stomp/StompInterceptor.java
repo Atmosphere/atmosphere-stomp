@@ -17,7 +17,12 @@
 
 package org.atmosphere.stomp;
 
-import org.atmosphere.cpr.AtmosphereInterceptorAdapter;
+import org.atmosphere.cpr.*;
+import org.atmosphere.stomp.protocol.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
 
 /**
  * <p>
@@ -52,4 +57,60 @@ public class StompInterceptor extends AtmosphereInterceptorAdapter {
      * Setting that specifies the {@link AtmosphereStompAdapter} implementation class used by the interceptor.
      */
     public static final String ADAPTER_CLASS = "org.atmosphere.stomp.atmosphereStompAdapterClass";
+
+    /**
+     * Setting that specifies the {@link org.atmosphere.stomp.protocol.StompFormat} implementation class used by the interceptor.
+     */
+    public static final String STOMP_FORMAT_CLASS = "org.atmosphere.stomp.stompFormatClass";
+
+    public static final String STOMP_MESSAGE_BODY = "org.atmosphere.stomp.body";
+
+    private final Logger logger = LoggerFactory.getLogger(getClass());
+
+    private AtmosphereFramework framework;
+
+    private StompFormat stompFormat;
+
+    @Override
+    public void configure(final AtmosphereConfig config) {
+        framework = config.framework();
+        final String stompFormatClassName = config.getInitParameter(STOMP_FORMAT_CLASS);
+
+        if (stompFormatClassName != null) {
+            try {
+                stompFormat = config.framework().newClassInstance(StompFormat.class,
+                        (Class<StompFormat>) Class.forName(stompFormatClassName));
+            } catch (Exception e) {
+                logger.error("Unable to initialize {}", getClass().getName(), e);
+            }
+        } else {
+            stompFormat = new StompFormatImpl();
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Action inspect(final AtmosphereResource r) {
+        try {
+            //new StompWireFormat().unmarshal(new DataInputStream(new ByteArrayInputStream(r.getRequest().getReader().readLine().getBytes())));
+            final Message message = stompFormat.parse(r.getRequest().getReader().readLine());
+
+            if (message.getFrame().equals(Frame.SEND)) {
+                r.getRequest().setAttribute(STOMP_MESSAGE_BODY, message.getBody());
+                final String mapping = message.getHeaders().get(Header.DESTINATION);
+                final AtmosphereFramework.AtmosphereHandlerWrapper handler = framework.getAtmosphereHandlers().get(mapping);
+
+                if (handler != null) {
+                    handler.atmosphereHandler.onRequest(r);
+                } else {
+                    logger.warn("No handler found for destination {}", mapping, new IllegalArgumentException());
+                }
+            }
+        } catch (final IOException ioe) {
+            logger.error("STOMP interceptor fails", ioe);
+        }
+        return super.inspect(r);
+    }
 }

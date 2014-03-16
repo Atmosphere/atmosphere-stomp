@@ -19,10 +19,10 @@ package org.atmosphere.stomp.test;
 
 import org.atmosphere.config.managed.Decoder;
 import org.atmosphere.config.managed.Encoder;
-import org.atmosphere.config.service.ManagedService;
 import org.atmosphere.config.service.Message;
 import org.atmosphere.cpr.AtmosphereResource;
 import org.atmosphere.cpr.Broadcaster;
+import org.atmosphere.stomp.annotation.StompEndpoint;
 import org.atmosphere.stomp.annotation.StompService;
 
 import java.util.Date;
@@ -36,8 +36,24 @@ import java.util.Date;
  * @since 2.2
  * @version 1.0
  */
-@ManagedService
+@StompEndpoint
 public class StompBusinessService {
+
+    /**
+     * Destination for first service.
+     */
+    public static final String DESTINATION_HELLO_WORLD = "/Hello World!";
+
+    /**
+     * Destination for second service.
+     */
+    public static final String DESTINATION_HELLO_WORLD2 = "/Hello World2!";
+
+    /**
+     * Destination for third service.
+     */
+    public static final String DESTINATION_HELLO_WORLD3 = "/Hello World3!";
+
 
     /**
      * <p>
@@ -102,7 +118,6 @@ public class StompBusinessService {
         }
     }
 
-
     /**
      * <p>
      * Decoders that build a {@link BusinessDto} from its {@code String} representation.
@@ -126,17 +141,16 @@ public class StompBusinessService {
 
     /**
      * <p>
-     * Invoked when a {@link org.atmosphere.stomp.protocol.Frame#SEND} is sent to atmosphere.
-     * Just uses the given {@link Broadcaster} to send a message containing the {@link AtmosphereResource#uuid()}
-     * of the specified {@link AtmosphereResource}.
+     * Invoked when a {@link org.atmosphere.stomp.protocol.Frame#SEND} is sent to atmosphere. Uses the given
+     * {@link Broadcaster} to send a message containing the {@link AtmosphereResource#uuid()} of the specified
+     * {@link AtmosphereResource}.
      * </p>
      *
-     * @param b the broadcaster associated to the path specified in frame headers
      * @param r the atmosphere resource associated to the client connection which sent the message
      */
-    @StompService(destination = "Hello World!")
-    public void sayHello(final Broadcaster b, final AtmosphereResource r) {
-        b.broadcast(r.uuid() + " says Hello World!");
+    @StompService(destination = DESTINATION_HELLO_WORLD)
+    public void sayHello(final AtmosphereResource r, final Broadcaster broadcaster) {
+        broadcaster.broadcast(r.uuid() + " from " + DESTINATION_HELLO_WORLD);
     }
 
     /**
@@ -150,9 +164,9 @@ public class StompBusinessService {
      * @param r the atmosphere resource associated to the client connection which sent the message
      * @return the message to send by the broadcaster associated to the path specified in frame headers
      */
-    @StompService(destination = "Hello World2!")
+    @StompService(destination = DESTINATION_HELLO_WORLD2)
     public String sayHello2(final AtmosphereResource r) {
-        return r.uuid() + " says Hello World!";
+        return r.uuid() + " from " + DESTINATION_HELLO_WORLD2;
     }
 
     /**
@@ -170,7 +184,7 @@ public class StompBusinessService {
      * @param dto the complex object
      * @return the dto to send by the broadcaster associated to the path specified in frame headers
      */
-    @StompService(destination = "Hello World3!")
+    @StompService(destination = DESTINATION_HELLO_WORLD3)
     @Message(encoders = { BusinessDtoEncoder.class }, decoders = {BusinessDtoDecoder.class })
     public BusinessDto sayHello3(final BusinessDto dto) {
         return dto;

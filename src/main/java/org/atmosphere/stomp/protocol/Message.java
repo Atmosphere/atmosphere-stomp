@@ -27,6 +27,12 @@ public class Message {
 
     private Map<Header, String> headers;
 
+    public Message(Frame frame, Map<Header, String> headers, String body) {
+        this.frame = frame;
+        this.headers = headers;
+        this.body = body;
+    }
+
     public Frame getFrame() {
         return frame;
     }

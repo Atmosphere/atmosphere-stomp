@@ -18,6 +18,12 @@
 package org.atmosphere.cpr;
 
 import org.atmosphere.stomp.StompInterceptor;
+import org.atmosphere.stomp.annotation.StompEndpointProcessor;
+import org.atmosphere.stomp.protocol.Frame;
+import org.atmosphere.stomp.protocol.Header;
+import org.atmosphere.stomp.protocol.Message;
+import org.atmosphere.stomp.protocol.StompFormat;
+import org.atmosphere.stomp.test.StompBusinessService;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.testng.annotations.BeforeMethod;
@@ -28,11 +34,17 @@ import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import java.io.*;
 import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
 
-import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertTrue;
 
 /**
  * <p>
@@ -41,19 +53,49 @@ import static org.testng.Assert.assertEquals;
  */
 public class StompInterceptorTest {
 
-    // TODO: refactor this class, BroadcasterTest class and InterceptorTest class to promote code reuse
     private AtmosphereFramework framework;
     private AtmosphereConfig config;
     private AsynchronousProcessor processor;
-    private Broadcaster broadcaster;
-    private final AtmosphereHandler handler = mock(AtmosphereHandler.class);
 
+    /**
+     * Simple {@link StompFormat} for test purpose.
+     */
+    public static class StompFormatTest implements StompFormat {
+
+        @Override
+        public Message parse(final String str) {
+            // Request's reader just returned the destination value
+            final Map<Header, String> headers = new HashMap<Header, String>();
+            headers.put(Header.DESTINATION, str);
+            return new Message(Frame.SEND, headers, "");
+        }
+
+        @Override
+        public String format(final Message msg) {
+            return "";
+        }
+    }
+
+    /**
+     * <p>
+     * Initializes framework.
+     * </p>
+     *
+     * @throws Throwable if test fails
+     */
     @BeforeMethod
     public void create() throws Throwable {
-
-        // From InterceptorTest
         framework = new AtmosphereFramework();
         framework.setAsyncSupport(mock(AsyncSupport.class));
+
+        // Detect processor
+        framework.addCustomAnnotationPackage(StompEndpointProcessor.class);
+
+        // Detect service
+        framework.addAnnotationPackage(StompBusinessService.class);
+
+        // Global handler: mandatory
+        framework.addAtmosphereHandler("/*", mock(AtmosphereHandler.class));
         framework.init(new ServletConfig() {
             @Override
             public String getServletName() {
@@ -66,8 +108,9 @@ public class StompInterceptorTest {
             }
 
             @Override
-            public String getInitParameter(String name) {
-                return null;
+            public String getInitParameter(final String name) {
+                // Specify StompFormat for tests
+                return StompInterceptor.STOMP_FORMAT_CLASS.equals(name) ? StompFormatTest.class.getName() : null;
             }
 
             @Override
@@ -75,6 +118,7 @@ public class StompInterceptorTest {
                 return null;
             }
         });
+
         config = framework.getAtmosphereConfig();
         processor = new AsynchronousProcessor(config) {
             @Override
@@ -83,55 +127,55 @@ public class StompInterceptorTest {
             }
         };
 
-        // From BroadcasterTest
-        final DefaultBroadcasterFactory factory = new DefaultBroadcasterFactory(DefaultBroadcaster.class, "NEVER", config);
-        config.framework().setBroadcasterFactory(factory);
-        broadcaster = factory.get(DefaultBroadcaster.class, "test");
-
         // Configure interceptor
-        framework.addAtmosphereHandler("/*", handler);
         framework.interceptor(new StompInterceptor());
     }
 
     /**
      * <p>
-     * Tests STOMP service with {@link org.atmosphere.stomp.test.StompBusinessService#sayHello(org.atmosphere.cpr.Broadcaster, org.atmosphere.cpr.AtmosphereResource)}
+     * Tests STOMP service with {@link org.atmosphere.stomp.test.StompBusinessService#sayHello(org.atmosphere.cpr.AtmosphereResource, Broadcaster)}
      * signature.
      * </p>
      */
-    @Test(enabled = false)
+    @Test(enabled = true)
     public void stompServiceWithBroadcasterParamTest() throws Exception {
-
-        // Add an AtmosphereResource that receives a BroadcastMessage
-        final StringBuilder broadcast = new StringBuilder();
-        final AtmosphereResource ar = mock(AtmosphereResource.class);
-        broadcaster.addAtmosphereResource(ar);
-        when(ar.write(anyString())).thenAnswer(new Answer<Object>() {
-
-            /**
-             * {@inheritDoc}
-             */
-            @Override
-            public Object answer(final InvocationOnMock invocationOnMock) throws Throwable {
-                return broadcast.append(invocationOnMock.getArguments()[0].toString());
-            }
-        });
+        // Wait until message has been broadcasted
+        final CountDownLatch countDownLatch = new CountDownLatch(1);
 
         // Mock intercepted request/resource
         final AtmosphereRequest req = mock(AtmosphereRequest.class);
         final AtmosphereResponse res = mock(AtmosphereResponse.class);
-        final StringWriter writer = new StringWriter();
-        final BufferedReader reader = new BufferedReader(new StringReader("SEND\ndestination:Hello World!"));
+        when(res.request()).thenReturn(req);
 
-        when(res.getWriter()).thenReturn(new PrintWriter(writer));
+        // Add an AtmosphereResource that receives a BroadcastMessage
+        final AtmosphereHandler ah = mock(AtmosphereHandler.class);
+        final StringBuilder broadcast = new StringBuilder();
+        final AtmosphereResource ar = new AtmosphereResourceImpl();
+        final Broadcaster b = framework.getBroadcasterFactory().lookup(StompBusinessService.DESTINATION_HELLO_WORLD);
+        ar.initialize(config, b, req, res, framework.asyncSupport, ah);
+        b.addAtmosphereResource(ar);
+
+        // Release lock wait message is broadcasted
+        doAnswer(new Answer() {
+            @Override
+            public Object answer(InvocationOnMock invocationOnMock) throws Throwable {
+                broadcast.append(((AtmosphereResourceEvent) invocationOnMock.getArguments()[0]).getMessage());
+                countDownLatch.countDown();
+                return null;
+            }
+        }).when(ah).onStateChange(any(AtmosphereResourceEvent.class));
+
+        // Indicates the destination in request
+        final BufferedReader reader = new BufferedReader(new StringReader(StompBusinessService.DESTINATION_HELLO_WORLD));
         when(req.getReader()).thenReturn(reader);
 
         // Run interceptor
         processor.service(req, res);
 
-        // Expect that broadcaster's resource and requester receives message from STOMP service
-        assertEquals(writer.toString(), "null says Hello World!");
-        assertEquals(broadcast.toString(), "null says Hello World!");
+        countDownLatch.await(5, TimeUnit.SECONDS);
+
+        // Expect that broadcaster's resource receives message from STOMP service
+        assertTrue(Pattern.matches("(.*)? from " + StompBusinessService.DESTINATION_HELLO_WORLD, broadcast.toString()));
     }
 
     /**
@@ -155,5 +199,4 @@ public class StompInterceptorTest {
     public void stompServiceWithDtoParamTest() {
 
     }
-
 }
