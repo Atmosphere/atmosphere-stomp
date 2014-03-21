@@ -78,6 +78,11 @@ public class StompAtmosphereHandler extends AbstractReflectorAtmosphereHandler {
     private final Encoder<Object, String> encoder;
 
     /**
+     * The broadcaster associated to this handler.
+     */
+    private final Broadcaster broadcaster;
+
+    /**
      * <p>
      * Creates a new instance.
      * </p>
@@ -96,6 +101,7 @@ public class StompAtmosphereHandler extends AbstractReflectorAtmosphereHandler {
         this.toProxy = toProxy;
         this.method = method;
         this.encoder = encoder;
+        this.broadcaster = broadcaster;
 
         // Detect appropriate provider for each parameter type
         final Class<?>[] paramTypes = method.getParameterTypes();
@@ -160,7 +166,7 @@ public class StompAtmosphereHandler extends AbstractReflectorAtmosphereHandler {
 
             if (retval != null) {
                 // TODO: wrap to frame message
-                atmosphereResource.getBroadcaster().broadcast(encoder == null ? retval : encoder.encode(retval));
+                broadcaster.broadcast(encoder == null ? retval : encoder.encode(retval));
             } else {
                 // TODO: ack?
             }

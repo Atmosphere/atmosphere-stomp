@@ -25,8 +25,6 @@ import org.atmosphere.cpr.Broadcaster;
 import org.atmosphere.stomp.annotation.StompEndpoint;
 import org.atmosphere.stomp.annotation.StompService;
 
-import java.util.Date;
-
 /**
  * <p>
  * An basic annotated service class that use stomp support.
@@ -94,7 +92,7 @@ public class StompBusinessService {
          */
         @Override
         public String toString() {
-            return new Date(timestamp).toString() + ": " + message;
+            return String.format("{\"timestamp\":%d, \"message\":\"%s\"}", timestamp, message);
         }
     }
 
@@ -134,8 +132,12 @@ public class StompBusinessService {
          */
         @Override
         public BusinessDto decode(final String s) {
-            final int limit = s.indexOf('|');
-            return new BusinessDto(Long.parseLong(s.substring(0, limit)), s.substring(limit));
+            final String tsToken = "\"timestamp\":";
+            final String msgToken = "\"message\":\"";
+
+            final int ts = s.indexOf(tsToken) + tsToken.length();
+            final int msg = s.indexOf(msgToken) + msgToken.length();
+            return new BusinessDto(Long.parseLong(s.substring(ts, s.indexOf(',', ts))), s.substring(msg, s.indexOf('"', msg)));
         }
     }
 

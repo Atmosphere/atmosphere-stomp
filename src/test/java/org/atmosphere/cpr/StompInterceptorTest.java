@@ -133,17 +133,22 @@ public class StompInterceptorTest {
 
     /**
      * <p>
-     * Tests STOMP service with {@link org.atmosphere.stomp.test.StompBusinessService#sayHello(org.atmosphere.cpr.AtmosphereResource, Broadcaster)}
-     * signature.
+     * Sends a message at the given destination and checks that the given regex matches the message broadcasted to a
+     * resource registered to the destination.
      * </p>
+     *
+     * @param destination the destination
+     * @param regex the expected regex
+     * @throws Exception if test fails
      */
-    @Test(enabled = true)
-    public void stompServiceWithBroadcasterParamTest() throws Exception {
+    private void runMessage(final String destination, final String regex) throws Exception {
         // Wait until message has been broadcasted
         final CountDownLatch countDownLatch = new CountDownLatch(1);
 
         // Mock intercepted request/resource
         final AtmosphereRequest req = mock(AtmosphereRequest.class);
+        when(req.getAttribute(StompInterceptor.STOMP_MESSAGE_BODY)).thenReturn(String.format("{\"timestamp\":%d, \"message\":\"%s\"}", System.currentTimeMillis(), "hello"));
+
         final AtmosphereResponse res = mock(AtmosphereResponse.class);
         when(res.request()).thenReturn(req);
 
@@ -151,14 +156,14 @@ public class StompInterceptorTest {
         final AtmosphereHandler ah = mock(AtmosphereHandler.class);
         final StringBuilder broadcast = new StringBuilder();
         final AtmosphereResource ar = new AtmosphereResourceImpl();
-        final Broadcaster b = framework.getBroadcasterFactory().lookup(StompBusinessService.DESTINATION_HELLO_WORLD);
+        final Broadcaster b = framework.getBroadcasterFactory().lookup(destination);
         ar.initialize(config, b, req, res, framework.asyncSupport, ah);
         b.addAtmosphereResource(ar);
 
         // Release lock wait message is broadcasted
         doAnswer(new Answer() {
             @Override
-            public Object answer(InvocationOnMock invocationOnMock) throws Throwable {
+            public Object answer(final InvocationOnMock invocationOnMock) throws Throwable {
                 broadcast.append(((AtmosphereResourceEvent) invocationOnMock.getArguments()[0]).getMessage());
                 countDownLatch.countDown();
                 return null;
@@ -166,7 +171,7 @@ public class StompInterceptorTest {
         }).when(ah).onStateChange(any(AtmosphereResourceEvent.class));
 
         // Indicates the destination in request
-        final BufferedReader reader = new BufferedReader(new StringReader(StompBusinessService.DESTINATION_HELLO_WORLD));
+        final BufferedReader reader = new BufferedReader(new StringReader(destination));
         when(req.getReader()).thenReturn(reader);
 
         // Run interceptor
@@ -175,7 +180,18 @@ public class StompInterceptorTest {
         countDownLatch.await(5, TimeUnit.SECONDS);
 
         // Expect that broadcaster's resource receives message from STOMP service
-        assertTrue(Pattern.matches("(.*)? from " + StompBusinessService.DESTINATION_HELLO_WORLD, broadcast.toString()));
+        assertTrue(Pattern.matches(regex, broadcast.toString()));
+    }
+
+    /**
+     * <p>
+     * Tests STOMP service with {@link org.atmosphere.stomp.test.StompBusinessService#sayHello(org.atmosphere.cpr.AtmosphereResource, Broadcaster)}
+     * signature.
+     * </p>
+     */
+    @Test(enabled = true)
+    public void stompServiceWithBroadcasterParamTest() throws Exception {
+        runMessage(StompBusinessService.DESTINATION_HELLO_WORLD, "(.*)? from " + StompBusinessService.DESTINATION_HELLO_WORLD);
     }
 
     /**
@@ -185,8 +201,8 @@ public class StompInterceptorTest {
      * </p>
      */
     @Test
-    public void stompServiceWithoutBroadcasterParamTest() {
-
+    public void stompServiceWithoutBroadcasterParamTest() throws Exception {
+        runMessage(StompBusinessService.DESTINATION_HELLO_WORLD2, "(.*)? from " + StompBusinessService.DESTINATION_HELLO_WORLD2);
     }
 
     /**
@@ -196,7 +212,7 @@ public class StompInterceptorTest {
      * </p>
      */
     @Test
-    public void stompServiceWithDtoParamTest() {
-
+    public void stompServiceWithDtoParamTest() throws Exception {
+        runMessage(StompBusinessService.DESTINATION_HELLO_WORLD3, "\\{\"timestamp\":(\\d)*,\\s\"message\":\"hello\"\\}");
     }
 }
