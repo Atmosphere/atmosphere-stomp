@@ -38,8 +38,8 @@ import java.io.IOException;
  *
  * <p>
  * By default the interceptor uses by default {@link AtmosphereStompAdapterImpl} to delegate the frame processing. User
- * can set its own implementation by specifying the class name in {@link #ADAPTER_CLASS} setting in atmosphere.xml or
- * web.xml file.
+ * can set its own implementation by specifying the class name in {@link PropertyClass#ADAPTER_CLASS} setting in
+ * atmosphere.xml or web.xml file.
  * </p>
  *
  * @author Guillaume DROUET
@@ -49,43 +49,130 @@ import java.io.IOException;
 public class StompInterceptor extends AtmosphereInterceptorAdapter {
 
     /**
+     * <p>
+     * This enum is dedicated to properties that represents a class to instantiate.
+     * </p>
+     *
+     * @author Guillaume DROUET
+     * @since 2.2
+     * @version 1.0
+     */
+    public enum PropertyClass {
+
+        /**
+         * Setting that specifies the {@link AtmosphereStompAdapter} implementation class used by the interceptor.
+         */
+        ADAPTER_CLASS("org.atmosphere.stomp.atmosphereStompAdapterClass", AtmosphereStompAdapterImpl.class.getName()),
+
+        /**
+         * Setting that specifies the {@link org.atmosphere.stomp.protocol.StompFormat} implementation class used by the interceptor.
+         */
+        STOMP_FORMAT_CLASS("org.atmosphere.stomp.stompFormatClass", StompFormatImpl.class.getName());
+
+        /**
+         * The logger.
+         */
+        private final Logger logger = LoggerFactory.getLogger(getClass());
+
+        /**
+         * The property name.
+         */
+        private String propertyName;
+
+        /**
+         * The default implementation if property not set by user.
+         */
+        private String defaultClass;
+
+        /**
+         * <p>
+         * Builds a new enumeration.
+         * </p>
+         *
+         * @param propertyName the property name
+         * @param defaultClass the default implementation class
+         */
+        private PropertyClass(final String propertyName, final String defaultClass) {
+            this.propertyName = propertyName;
+            this.defaultClass = defaultClass;
+        }
+
+        /**
+         * <p>
+         * Checks in the {@link AtmosphereConfig} if the {@link #propertyName} is defined as an init-param and instantiate
+         * the appropriate class.
+         * </p>
+         *
+         * <p>
+         * If instantiation fails, the exception is logged and {@code null} is returned.
+         * </p>
+         *
+         * @param desiredType the type to be returned
+         * @param config the configuration that provides parameters
+         * @param <T> the generic for modular call
+         * @return the instance of the expected class, {@code null} if an error occurs
+         */
+        public <T> T retrieve(final Class<T> desiredType, final AtmosphereConfig config) {
+            final String initParameter = config.getInitParameter(this.propertyName);
+            final String className = (initParameter != null) ? initParameter : defaultClass;
+
+            try {
+                final AtmosphereFramework fwk = config.framework();
+                final Object retval = fwk.newClassInstance(desiredType, desiredType.getClass().cast(Class.forName(className)));
+                return desiredType.cast(retval);
+            } catch (Exception e) {
+                logger.error("Unable to initialize {}", getClass().getName(), e);
+                return null;
+            }
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String toString() {
+            return propertyName;
+        }
+    }
+
+    /**
      * Setting that specifies if the interceptor ignores messages that don't respect STOMP protocol.
      */
     public static final String IGNORE_ERROR = "org.atmosphere.stomp.ignoreError";
 
     /**
-     * Setting that specifies the {@link AtmosphereStompAdapter} implementation class used by the interceptor.
+     * The attribute name this interceptor uses to inject a parsed body in the request when it is extracted from the frame.
      */
-    public static final String ADAPTER_CLASS = "org.atmosphere.stomp.atmosphereStompAdapterClass";
-
-    /**
-     * Setting that specifies the {@link org.atmosphere.stomp.protocol.StompFormat} implementation class used by the interceptor.
-     */
-    public static final String STOMP_FORMAT_CLASS = "org.atmosphere.stomp.stompFormatClass";
-
     public static final String STOMP_MESSAGE_BODY = "org.atmosphere.stomp.body";
 
+    /**
+     * The logger.
+     */
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
+    /**
+     * The framework extracted from the {@link AtmosphereConfig} when {@link #configure(AtmosphereConfig)} is called.
+     */
     private AtmosphereFramework framework;
 
+    /**
+     * The formatter that can encode and decode frames.
+     */
     private StompFormat stompFormat;
 
+    /**
+     * The adapter that do the appropriate stuff for each detected frame.
+     */
+    private AtmosphereStompAdapter adapter;
+
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void configure(final AtmosphereConfig config) {
         framework = config.framework();
-        final String stompFormatClassName = config.getInitParameter(STOMP_FORMAT_CLASS);
-
-        if (stompFormatClassName != null) {
-            try {
-                stompFormat = config.framework().newClassInstance(StompFormat.class,
-                        (Class<StompFormat>) Class.forName(stompFormatClassName));
-            } catch (Exception e) {
-                logger.error("Unable to initialize {}", getClass().getName(), e);
-            }
-        } else {
-            stompFormat = new StompFormatImpl();
-        }
+        stompFormat = PropertyClass.STOMP_FORMAT_CLASS.retrieve(StompFormat.class, config);
+        adapter = PropertyClass.ADAPTER_CLASS.retrieve(AtmosphereStompAdapter.class, config);
     }
 
     /**
@@ -97,6 +184,7 @@ public class StompInterceptor extends AtmosphereInterceptorAdapter {
             //new StompWireFormat().unmarshal(new DataInputStream(new ByteArrayInputStream(r.getRequest().getReader().readLine().getBytes())));
             final Message message = stompFormat.parse(r.getRequest().getReader().readLine());
 
+            // TODO: delegate to adapter
             if (message.getFrame().equals(Frame.SEND)) {
                 r.getRequest().setAttribute(STOMP_MESSAGE_BODY, message.getBody());
                 final String mapping = message.getHeaders().get(Header.DESTINATION);

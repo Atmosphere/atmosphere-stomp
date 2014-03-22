@@ -110,7 +110,7 @@ public class StompInterceptorTest {
             @Override
             public String getInitParameter(final String name) {
                 // Specify StompFormat for tests
-                return StompInterceptor.STOMP_FORMAT_CLASS.equals(name) ? StompFormatTest.class.getName() : null;
+                return StompInterceptor.PropertyClass.STOMP_FORMAT_CLASS.toString().equals(name) ? StompFormatTest.class.getName() : null;
             }
 
             @Override
