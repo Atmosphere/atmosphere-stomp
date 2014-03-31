@@ -6,7 +6,6 @@
 		<version>2.2.0-SNAPSHOT</version>
 	</parent>
 	<modelVersion>4.0.0</modelVersion>
-	<groupId>org.atmosphere</groupId>
 	<artifactId>atmosphere-stomp</artifactId>
 	<packaging>jar</packaging>
 	<version>1.0.0-SNAPSHOT</version>
@@ -41,11 +40,12 @@
 		</plugins>
 	</build>
 	<dependencies>
-        <!-- TODO : confirm the use of activemq as default StompFormat implementation -->
-        <!--dependency>
+        <!-- Set of candidate libraries as atmosphere dependency -->
+        <dependency>
             <groupId>org.apache.activemq</groupId>
             <artifactId>activemq-stomp</artifactId>
             <version>5.9.0</version>
+            <scope>test</scope>
             <exclusions>
                 <exclusion>
                     <groupId>com.thoughtworks.xstream</groupId>
@@ -56,7 +56,14 @@
                     <artifactId>jettison</artifactId>
                 </exclusion>
             </exclusions>
-        </dependency-->
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.activemq</groupId>
+            <artifactId>apollo-stomp</artifactId>
+            <version>1.7</version>
+        </dependency>
+
 		<dependency>
 			<groupId>org.atmosphere</groupId>
 			<artifactId>atmosphere-runtime</artifactId>
