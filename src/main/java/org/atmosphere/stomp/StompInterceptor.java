@@ -181,7 +181,6 @@ public class StompInterceptor extends AtmosphereInterceptorAdapter {
     @Override
     public Action inspect(final AtmosphereResource r) {
         try {
-            //new StompWireFormat().unmarshal(new DataInputStream(new ByteArrayInputStream(r.getRequest().getReader().readLine().getBytes())));
             final Message message = stompFormat.parse(r.getRequest().getReader().readLine());
 
             // TODO: delegate to adapter
