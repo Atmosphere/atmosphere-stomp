@@ -19,6 +19,7 @@ package org.atmosphere.stomp;
 
 import org.atmosphere.cpr.*;
 import org.atmosphere.stomp.protocol.*;
+import org.atmosphere.stomp.protocol.Action;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,7 +29,7 @@ import java.io.IOException;
  * <p>
  * This interceptor reads the messages and parse it thanks to the {@link org.atmosphere.stomp.protocol.Parser}. When
  * the message is parsed, the interceptor invokes a method provided by an {@link AtmosphereInterceptorAdapter} according
- * to the {@link org.atmosphere.stomp.protocol.Frame} specified inside the message.
+ * to the {@link org.atmosphere.stomp.protocol.Action} specified inside the message.
  * </p>
  *
  * <p>
@@ -179,12 +180,12 @@ public class StompInterceptor extends AtmosphereInterceptorAdapter {
      * {@inheritDoc}
      */
     @Override
-    public Action inspect(final AtmosphereResource r) {
+    public org.atmosphere.cpr.Action inspect(final AtmosphereResource r) {
         try {
-            final Message message = stompFormat.parse(r.getRequest().getReader().readLine());
+            final Frame message = stompFormat.parse(r.getRequest().getReader().readLine());
 
             // TODO: delegate to adapter
-            if (message.getFrame().equals(Frame.SEND)) {
+            if (message.getAction().equals(Action.SEND)) {
                 r.getRequest().setAttribute(STOMP_MESSAGE_BODY, message.getBody());
                 final String mapping = message.getHeaders().get(Header.DESTINATION);
                 final AtmosphereFramework.AtmosphereHandlerWrapper handler = framework.getAtmosphereHandlers().get(mapping);

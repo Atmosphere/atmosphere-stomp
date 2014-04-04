@@ -18,4 +18,11 @@
 package org.atmosphere.stomp.protocol;
 
 public class ParseException extends Exception {
+
+    public ParseException(final Exception origin) {
+        super(origin);
+    }
+
+    public ParseException() {
+    }
 }

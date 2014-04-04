@@ -17,32 +17,5 @@
 
 package org.atmosphere.stomp.protocol;
 
-import java.util.Map;
-
-public class Message {
-
-    private Frame frame;
-
-    private String body;
-
-    private Map<Header, String> headers;
-
-    public Message(Frame frame, Map<Header, String> headers, String body) {
-        this.frame = frame;
-        this.headers = headers;
-        this.body = body;
-    }
-
-    public Frame getFrame() {
-        return frame;
-    }
-
-    public String getBody() {
-        return body;
-    }
-
-    public Map<Header, String> getHeaders() {
-        return headers;
-    }
-
+public class IllegalActionException extends ParseException {
 }

@@ -19,9 +19,9 @@ package org.atmosphere.cpr;
 
 import org.atmosphere.stomp.StompInterceptor;
 import org.atmosphere.stomp.annotation.StompEndpointProcessor;
+import org.atmosphere.stomp.protocol.Action;
 import org.atmosphere.stomp.protocol.Frame;
 import org.atmosphere.stomp.protocol.Header;
-import org.atmosphere.stomp.protocol.Message;
 import org.atmosphere.stomp.protocol.StompFormat;
 import org.atmosphere.stomp.test.StompBusinessService;
 import org.mockito.invocation.InvocationOnMock;
@@ -63,15 +63,15 @@ public class StompInterceptorTest {
     public static class StompFormatTest implements StompFormat {
 
         @Override
-        public Message parse(final String str) {
+        public Frame parse(final String str) {
             // Request's reader just returned the destination value
             final Map<Header, String> headers = new HashMap<Header, String>();
             headers.put(Header.DESTINATION, str);
-            return new Message(Frame.SEND, headers, "");
+            return new Frame(Action.SEND, headers, "");
         }
 
         @Override
-        public String format(final Message msg) {
+        public String format(final Frame msg) {
             return "";
         }
     }
@@ -122,7 +122,7 @@ public class StompInterceptorTest {
         config = framework.getAtmosphereConfig();
         processor = new AsynchronousProcessor(config) {
             @Override
-            public Action service(AtmosphereRequest req, AtmosphereResponse res) throws IOException, ServletException {
+            public org.atmosphere.cpr.Action service(AtmosphereRequest req, AtmosphereResponse res) throws IOException, ServletException {
                 return action(req, res);
             }
         };

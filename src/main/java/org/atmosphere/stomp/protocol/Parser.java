@@ -17,12 +17,25 @@
 
 package org.atmosphere.stomp.protocol;
 
+import org.apache.activemq.apollo.broker.store.MessageRecord;
+import org.apache.activemq.apollo.stomp.StompCodec;
+import org.apache.activemq.apollo.stomp.StompFrameMessage;
+import org.fusesource.hawtbuf.AsciiBuffer;
+import org.fusesource.hawtbuf.Buffer;
+import org.apache.activemq.apollo.stomp.StompFrame;
+import scala.Tuple2;
+import scala.collection.Iterator;
+
+import java.io.ByteArrayOutputStream;
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * <p>
- * This class parses text stream that respects STOMP protocol to extract a structured {@link Message} that provides a
- * set of information. A {@link Message} contains:
+ * This class parses text stream that respects STOMP protocol to extract a structured {@link Frame} that provides a
+ * set of information. A {@link Frame} contains:
  * <ul>
- *     <li>The {@link Frame}</li>
+ *     <li>The {@link Action}</li>
  *     <li>The {@link Header headers} and their values</li>
  *     <li>The body in {@code String} value</li>
  * </ul>
@@ -45,6 +58,16 @@ public class Parser {
     private String stream;
 
     /**
+     * Resulting frame.
+     */
+    private StompFrame sm;
+
+    /**
+     * The exception that occurred of frame can't be decoded.
+     */
+    private Exception error;
+
+    /**
      * <p>
      * Builds a new {@link Parser} for the given text stream.
      * </p>
@@ -61,12 +84,19 @@ public class Parser {
      * </p>
      */
     public void parse() {
-        // TODO
+        try {
+            final MessageRecord mr = new MessageRecord();
+            mr.buffer_$eq(new Buffer(stream.getBytes()));
+            final StompFrameMessage sfm = StompCodec.decode(mr);
+            sm = sfm.frame();
+        } catch (Exception spe) {
+            error = spe;
+        }
     }
 
     /**
      * <p>
-     * Builds a {@link Message} that provides information extracted from {@link #stream}. If {@link #parse()} has not
+     * Builds a {@link Frame} that provides information extracted from {@link #stream}. If {@link #parse()} has not
      * been already called, then this method invokes it.
      * </p>
      *
@@ -78,8 +108,33 @@ public class Parser {
      * @return the message
      * @throws ParseException if {@link #stream} violates STOMP protocol
      */
-    public Message toMessage() throws ParseException {
-        // TODO
-        return null;
+    public Frame toFrame() throws ParseException {
+        // parse() not already called
+        if (sm == null && error == null) {
+            parse();
+            return toFrame();
+        // parse() failed
+        } else if (error != null) {
+            throw new ParseException(error);
+        }
+
+        // Read action
+        final Action action = Action.parse(sm.action().toString());
+
+        // Read headers
+        final Map<Header, String> headers = new HashMap<Header, String>();
+        final Iterator<Tuple2<AsciiBuffer, AsciiBuffer>> it = sm.headers().iterator();
+
+        // TODO: check mandatory headers
+        while (it.hasNext()) {
+            final Tuple2<AsciiBuffer, AsciiBuffer> tuple = it.next();
+            headers.put(Header.parse(tuple._1().toString()), tuple._2().toString());
+        }
+
+        // Read body
+        final ByteArrayOutputStream content = new ByteArrayOutputStream();
+        sm.content().writeTo(content);
+
+        return new Frame(action, headers, new String(content.toByteArray()));
     }
 }

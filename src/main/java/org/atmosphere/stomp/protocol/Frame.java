@@ -17,35 +17,32 @@
 
 package org.atmosphere.stomp.protocol;
 
-public enum Frame {
+import java.util.Map;
 
-    CONNECT,
+public class Frame {
 
-    DISCONNECT,
+    private Action action;
 
-    STOMP,
+    private String body;
 
-    CONNECTED,
+    private Map<Header, String> headers;
 
-    SEND,
+    public Frame(Action action, Map<Header, String> headers, String body) {
+        this.action = action;
+        this.headers = headers;
+        this.body = body;
+    }
 
-    BEGIN,
+    public Action getAction() {
+        return action;
+    }
 
-    COMMIT,
+    public String getBody() {
+        return body;
+    }
 
-    ABORT,
+    public Map<Header, String> getHeaders() {
+        return headers;
+    }
 
-    SUBSCRIBE,
-
-    UNSUBSCRIBE,
-
-    ACK,
-
-    NACK,
-
-    MESSAGE,
-
-    RECEIPT,
-
-    ERROR,
 }

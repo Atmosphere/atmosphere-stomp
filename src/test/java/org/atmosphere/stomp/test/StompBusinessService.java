@@ -143,7 +143,7 @@ public class StompBusinessService {
 
     /**
      * <p>
-     * Invoked when a {@link org.atmosphere.stomp.protocol.Frame#SEND} is sent to atmosphere. Uses the given
+     * Invoked when a {@link org.atmosphere.stomp.protocol.Action#SEND} is sent to atmosphere. Uses the given
      * {@link Broadcaster} to send a message containing the {@link AtmosphereResource#uuid()} of the specified
      * {@link AtmosphereResource}.
      * </p>
@@ -157,7 +157,7 @@ public class StompBusinessService {
 
     /**
      * <p>
-     * Invoked when a {@link org.atmosphere.stomp.protocol.Frame#SEND} is sent to atmosphere.
+     * Invoked when a {@link org.atmosphere.stomp.protocol.Action#SEND} is sent to atmosphere.
      * Just returns a message containing the {@link AtmosphereResource#uuid()} of the specified {@link AtmosphereResource}.
      * The value will be dispatched by the {@link Broadcaster} associated to the path specified in frame headers
      * transparently.
@@ -173,7 +173,7 @@ public class StompBusinessService {
 
     /**
      * <p>
-     * Invoked when a {@link org.atmosphere.stomp.protocol.Frame#SEND} is sent to atmosphere.
+     * Invoked when a {@link org.atmosphere.stomp.protocol.Action#SEND} is sent to atmosphere.
      * Just returns the specified parameter. The value will be dispatched by the {@link Broadcaster}
      * associated to the path specified in frame headers transparently.
      * </p>

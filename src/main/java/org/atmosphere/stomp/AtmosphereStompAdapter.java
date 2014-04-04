@@ -74,8 +74,8 @@ public interface AtmosphereStompAdapter {
      * <p>
      * The result of the method invocation is dispatched by the {@link org.atmosphere.cpr.Broadcaster} identified with
      * the path specified in the given {@link Header headers}. If no annotated method matches the requested send,
-     * then the body is dispatched. Original body or result are sent in a {@link org.atmosphere.stomp.protocol.Frame#MESSAGE}
-     * frame. Finally, if the method invocation throws an exception, then an {@link org.atmosphere.stomp.protocol.Frame#ERROR}
+     * then the body is dispatched. Original body or result are sent in a {@link org.atmosphere.stomp.protocol.Action#MESSAGE}
+     * frame. Finally, if the method invocation throws an exception, then an {@link org.atmosphere.stomp.protocol.Action#ERROR}
      * is sent only to the specified {@link AtmosphereResource} that sent the frame.
      * </p>
      *
@@ -97,7 +97,7 @@ public interface AtmosphereStompAdapter {
      * </p>
      *
      * <p>
-     * A transaction ID is generated that could be specified in future {@link org.atmosphere.stomp.protocol.Frame#SEND}
+     * A transaction ID is generated that could be specified in future {@link org.atmosphere.stomp.protocol.Action#SEND}
      * to include their result in the transaction.
      * </p>
      *

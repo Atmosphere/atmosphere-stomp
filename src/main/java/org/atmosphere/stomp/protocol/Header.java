@@ -49,5 +49,14 @@ public enum Header {
 
     MESSAGE_ID,
 
-    MESSAGE
+    MESSAGE;
+
+    public static Header parse(final String str) throws IllegalHeaderException {
+        try {
+            return valueOf(str.toUpperCase().replace('-', '_'));
+        } catch (IllegalArgumentException iae) {
+            throw new IllegalHeaderException();
+        }
+    }
+
 }

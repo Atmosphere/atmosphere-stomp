@@ -17,5 +17,43 @@
 
 package org.atmosphere.stomp.protocol;
 
-public class IllegalFrameException extends ParseException {
+public enum Action {
+
+    CONNECT,
+
+    DISCONNECT,
+
+    STOMP,
+
+    CONNECTED,
+
+    SEND,
+
+    BEGIN,
+
+    COMMIT,
+
+    ABORT,
+
+    SUBSCRIBE,
+
+    UNSUBSCRIBE,
+
+    ACK,
+
+    NACK,
+
+    MESSAGE,
+
+    RECEIPT,
+
+    ERROR;
+
+    public static Action parse(final String str) throws IllegalActionException {
+        try {
+            return valueOf(str.toUpperCase());
+        } catch (IllegalArgumentException iae) {
+            throw new IllegalActionException();
+        }
+    }
 }

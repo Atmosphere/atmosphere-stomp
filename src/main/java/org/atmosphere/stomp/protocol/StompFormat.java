@@ -2,7 +2,7 @@ package org.atmosphere.stomp.protocol;
 
 public interface StompFormat {
 
-    Message parse(String str);
+    Frame parse(String str);
 
-    String format(Message msg);
+    String format(Frame msg);
 }

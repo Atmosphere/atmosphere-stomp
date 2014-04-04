@@ -22,7 +22,7 @@ import java.lang.annotation.*;
 /**
  * <p>
  * This annotation, when used on a method, indicates which invocation should be done for a particular
- * {@link org.atmosphere.stomp.protocol.Frame#SEND send}.
+ * {@link org.atmosphere.stomp.protocol.Action#SEND send}.
  * </p>
  *
  * @author Guillaume DROUET
@@ -36,7 +36,7 @@ public @interface StompService {
 
     /**
      * <p>
-     * Gets the destination that matches the destination header send in the {@link org.atmosphere.stomp.protocol.Frame}
+     * Gets the destination that matches the destination header send in the {@link org.atmosphere.stomp.protocol.Action}
      * to determine if the annotated method is related to it and should be invoked or not.
      * </p>
      *
