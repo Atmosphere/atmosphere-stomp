@@ -17,9 +17,13 @@
 
 package org.atmosphere.stomp;
 
+import org.atmosphere.cpr.AtmosphereFramework;
 import org.atmosphere.cpr.AtmosphereResource;
 import org.atmosphere.stomp.protocol.Header;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.util.Map;
 
 /**
@@ -32,6 +36,11 @@ import java.util.Map;
  * @version 1.0
  */
 public class AtmosphereStompAdapterImpl implements AtmosphereStompAdapter {
+
+    /**
+     * The logger.
+     */
+    private final Logger logger = LoggerFactory.getLogger(getClass());
 
     /**
      * {@inheritDoc}
@@ -53,8 +62,17 @@ public class AtmosphereStompAdapterImpl implements AtmosphereStompAdapter {
      * {@inheritDoc}
      */
     @Override
-    public void send(final AtmosphereResource atmosphereResource, final Map<Header, String> headers, String body) {
-        // TODO
+    public void send(final AtmosphereResource atmosphereResource, final Map<Header, String> headers, final String body, final AtmosphereFramework framework)
+            throws IOException {
+        atmosphereResource.getRequest().setAttribute(StompInterceptor.STOMP_MESSAGE_BODY, body);
+        final String mapping = headers.get(Header.DESTINATION);
+        final AtmosphereFramework.AtmosphereHandlerWrapper handler = framework.getAtmosphereHandlers().get(mapping);
+
+        if (handler != null) {
+            handler.atmosphereHandler.onRequest(atmosphereResource);
+        } else {
+            logger.warn("No handler found for destination {}", mapping, new IllegalArgumentException());
+        }
     }
 
     /**

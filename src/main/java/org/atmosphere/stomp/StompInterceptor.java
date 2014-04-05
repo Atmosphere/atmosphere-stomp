@@ -19,7 +19,6 @@ package org.atmosphere.stomp;
 
 import org.atmosphere.cpr.*;
 import org.atmosphere.stomp.protocol.*;
-import org.atmosphere.stomp.protocol.Action;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -184,21 +183,15 @@ public class StompInterceptor extends AtmosphereInterceptorAdapter {
         try {
             final Frame message = stompFormat.parse(r.getRequest().getReader().readLine());
 
-            // TODO: delegate to adapter
-            if (message.getAction().equals(Action.SEND)) {
-                r.getRequest().setAttribute(STOMP_MESSAGE_BODY, message.getBody());
-                final String mapping = message.getHeaders().get(Header.DESTINATION);
-                final AtmosphereFramework.AtmosphereHandlerWrapper handler = framework.getAtmosphereHandlers().get(mapping);
-
-                if (handler != null) {
-                    handler.atmosphereHandler.onRequest(r);
-                } else {
-                    logger.warn("No handler found for destination {}", mapping, new IllegalArgumentException());
-                }
+            switch (message.getAction()) {
+                case SEND:
+                    adapter.send(r, message.getHeaders(), message.getBody(), framework);
+                    break;
             }
         } catch (final IOException ioe) {
             logger.error("STOMP interceptor fails", ioe);
         }
+
         return super.inspect(r);
     }
 }

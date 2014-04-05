@@ -17,9 +17,11 @@
 
 package org.atmosphere.stomp;
 
+import org.atmosphere.cpr.AtmosphereFramework;
 import org.atmosphere.cpr.AtmosphereResource;
 import org.atmosphere.stomp.protocol.Header;
 
+import java.io.IOException;
 import java.util.Map;
 
 /**
@@ -87,9 +89,12 @@ public interface AtmosphereStompAdapter {
      * @param atmosphereResource the atmosphere resource that sent the send
      * @param headers the headers extracted from the message that contain the destination path and optionally a transaction ID
      * @param body the body extracted from the frame
+     * @param framework the {@link AtmosphereFramework}
+     * @throws IOException if request can't be processed
      * @see #begin(org.atmosphere.cpr.AtmosphereResource)
      */
-    void send(AtmosphereResource atmosphereResource, Map<Header, String> headers, String body);
+    void send(AtmosphereResource atmosphereResource, Map<Header, String> headers, String body, AtmosphereFramework framework)
+            throws IOException;
 
     /**
      * <p>
@@ -102,9 +107,9 @@ public interface AtmosphereStompAdapter {
      * </p>
      *
      * <p>
-     * In that case, all {@link #send(org.atmosphere.cpr.AtmosphereResource, java.util.Map, String)} operation results
-     * won't be dispatched by the {@link org.atmosphere.cpr.Broadcaster} until the {@link AtmosphereResource} sends a
-     * commit frame for the associated transaction ID.
+     * In that case, all {@link #send(org.atmosphere.cpr.AtmosphereResource, java.util.Map, String, AtmosphereFramework)}
+     * operation results won't be dispatched by the {@link org.atmosphere.cpr.Broadcaster} until the {@link AtmosphereResource}
+     * sends a commit frame for the associated transaction ID.
      * </p>
      *
      * @param atmosphereResource the {@link AtmosphereResource} that begins the transaction
@@ -117,7 +122,7 @@ public interface AtmosphereStompAdapter {
      * </p>
      *
      * <p>
-     * All {@link #send(org.atmosphere.cpr.AtmosphereResource, java.util.Map, String)} operation results
+     * All {@link #send(org.atmosphere.cpr.AtmosphereResource, java.util.Map, String, AtmosphereFramework)} operation results
      * associated to the transaction ID specified in headers are dispatched by the {@link org.atmosphere.cpr.Broadcaster}.
      * </p>
      *
@@ -132,8 +137,8 @@ public interface AtmosphereStompAdapter {
      * </p>
      *
      * <p>
-     * All {@link #send(org.atmosphere.cpr.AtmosphereResource, java.util.Map, String)} operations results associated to
-     * the transaction ID specified inside the given headers are erased.
+     * All {@link #send(org.atmosphere.cpr.AtmosphereResource, java.util.Map, String, AtmosphereFramework)} operations
+     * results associated to the transaction ID specified inside the given headers are erased.
      * </p>
      *
      * @param atmosphereResource the {@link AtmosphereResource} that aborts the transaction
