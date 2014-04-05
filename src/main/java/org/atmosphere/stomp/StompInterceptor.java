@@ -187,6 +187,12 @@ public class StompInterceptor extends AtmosphereInterceptorAdapter {
                 case SEND:
                     adapter.send(r, message.getHeaders(), message.getBody(), framework);
                     break;
+                case SUBSCRIBE:
+                    adapter.subscribe(r, message.getHeaders(), framework);
+                    break;
+                case UNSUBSCRIBE:
+                    adapter.unsubscribe(r, message.getHeaders(), framework);
+                    break;
             }
         } catch (final IOException ioe) {
             logger.error("STOMP interceptor fails", ioe);

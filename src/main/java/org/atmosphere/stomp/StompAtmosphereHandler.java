@@ -166,7 +166,7 @@ public class StompAtmosphereHandler extends AbstractReflectorAtmosphereHandler {
 
             if (retval != null) {
                 // TODO: wrap to frame message
-                broadcaster.broadcast(encoder == null ? retval : encoder.encode(retval));
+                broadcaster.broadcast(encoder == null ? retval : encoder.encode(retval)).get();
             } else {
                 // TODO: ack?
             }
@@ -174,7 +174,7 @@ public class StompAtmosphereHandler extends AbstractReflectorAtmosphereHandler {
             logger.warn("Failed to process class annotated {}", StompEndpoint.class.getName(), iae);
         } catch (InvocationTargetException ite) {
             // TODO send error frame
-        }
+        } catch (Exception e) {}
     }
 
     /**

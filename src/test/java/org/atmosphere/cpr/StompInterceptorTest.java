@@ -58,6 +58,11 @@ public class StompInterceptorTest {
     private AsynchronousProcessor processor;
 
     /**
+     * Action injected by formatter. Could be change on the fly inside tests.
+     */
+    private static Action action = Action.SEND;
+
+    /**
      * Simple {@link StompFormat} for test purpose.
      */
     public static class StompFormatTest implements StompFormat {
@@ -67,7 +72,7 @@ public class StompInterceptorTest {
             // Request's reader just returned the destination value
             final Map<Header, String> headers = new HashMap<Header, String>();
             headers.put(Header.DESTINATION, str);
-            return new Frame(Action.SEND, headers, "");
+            return new Frame(action, headers, "");
         }
 
         @Override
@@ -133,18 +138,14 @@ public class StompInterceptorTest {
 
     /**
      * <p>
-     * Sends a message at the given destination and checks that the given regex matches the message broadcasted to a
-     * resource registered to the destination.
+     * Builds a new atmosphere resource.
      * </p>
      *
-     * @param destination the destination
-     * @param regex the expected regex
-     * @throws Exception if test fails
+     * @param destination the destination in the request
+     * @return the resource
+     * @throws Exception if creation fails
      */
-    private void runMessage(final String destination, final String regex) throws Exception {
-        // Wait until message has been broadcasted
-        final CountDownLatch countDownLatch = new CountDownLatch(1);
-
+    private AtmosphereResource newAtmosphereResource(final String destination) throws Exception {
         // Mock intercepted request/resource
         final AtmosphereRequest req = mock(AtmosphereRequest.class);
         when(req.getAttribute(StompInterceptor.STOMP_MESSAGE_BODY)).thenReturn(String.format("{\"timestamp\":%d, \"message\":\"%s\"}", System.currentTimeMillis(), "hello"));
@@ -154,13 +155,45 @@ public class StompInterceptorTest {
 
         // Add an AtmosphereResource that receives a BroadcastMessage
         final AtmosphereHandler ah = mock(AtmosphereHandler.class);
-        final StringBuilder broadcast = new StringBuilder();
         final AtmosphereResource ar = new AtmosphereResourceImpl();
         final Broadcaster b = framework.getBroadcasterFactory().lookup(destination);
         ar.initialize(config, b, req, res, framework.asyncSupport, ah);
-        b.addAtmosphereResource(ar);
 
-        // Release lock wait message is broadcasted
+        // Indicates the destination in request
+        final BufferedReader reader = new BufferedReader(new StringReader(destination));
+        when(req.getReader()).thenReturn(reader);
+
+        return ar;
+    }
+
+    /**
+     * <p>
+     * Adds the given resource to the broadcaster mapped to the given destination.
+     * </p>
+     *
+     * @param destination the destination
+     * @param ar the atmosphere resource
+     */
+    private void addToBroadcaster(final String destination, final AtmosphereResource ar) {
+        final Broadcaster b = framework.getBroadcasterFactory().lookup(destination);
+        b.addAtmosphereResource(ar);
+    }
+
+    /**
+     * <p>
+     * Sends a message at the given destination and checks that the given regex matches the message broadcasted to a
+     * resource registered to the destination.
+     * </p>
+     *
+     * @param regex the expected regex
+     * @throws Exception if test fails
+     */
+    private void runMessage(final String regex, final AtmosphereResource ar) throws Exception {
+        // Wait until message has been broadcasted
+        final CountDownLatch countDownLatch = new CountDownLatch(1);
+        final StringBuilder broadcast = new StringBuilder();
+
+        // Release lock when message is broadcasted
         doAnswer(new Answer() {
             @Override
             public Object answer(final InvocationOnMock invocationOnMock) throws Throwable {
@@ -168,14 +201,10 @@ public class StompInterceptorTest {
                 countDownLatch.countDown();
                 return null;
             }
-        }).when(ah).onStateChange(any(AtmosphereResourceEvent.class));
-
-        // Indicates the destination in request
-        final BufferedReader reader = new BufferedReader(new StringReader(destination));
-        when(req.getReader()).thenReturn(reader);
+        }).when(ar.getAtmosphereHandler()).onStateChange(any(AtmosphereResourceEvent.class));
 
         // Run interceptor
-        processor.service(req, res);
+        processor.service(ar.getRequest(), ar.getResponse());
 
         countDownLatch.await(5, TimeUnit.SECONDS);
 
@@ -188,10 +217,14 @@ public class StompInterceptorTest {
      * Tests STOMP service with {@link org.atmosphere.stomp.test.StompBusinessService#sayHello(org.atmosphere.cpr.AtmosphereResource, Broadcaster)}
      * signature.
      * </p>
+     *
+     * @throws Exception if test fails
      */
-    @Test(enabled = true)
+    @Test
     public void stompServiceWithBroadcasterParamTest() throws Exception {
-        runMessage(StompBusinessService.DESTINATION_HELLO_WORLD, "(.*)? from " + StompBusinessService.DESTINATION_HELLO_WORLD);
+        final AtmosphereResource ar = newAtmosphereResource(StompBusinessService.DESTINATION_HELLO_WORLD);
+        addToBroadcaster(StompBusinessService.DESTINATION_HELLO_WORLD, ar);
+        runMessage("(.*)? from " + StompBusinessService.DESTINATION_HELLO_WORLD, ar);
     }
 
     /**
@@ -199,10 +232,14 @@ public class StompInterceptorTest {
      * Tests STOMP service with {@link org.atmosphere.stomp.test.StompBusinessService#sayHello2(org.atmosphere.cpr.AtmosphereResource)}
      * signature.
      * </p>
+     *
+     * @throws Exception if test fails
      */
     @Test
     public void stompServiceWithoutBroadcasterParamTest() throws Exception {
-        runMessage(StompBusinessService.DESTINATION_HELLO_WORLD2, "(.*)? from " + StompBusinessService.DESTINATION_HELLO_WORLD2);
+        final AtmosphereResource ar = newAtmosphereResource(StompBusinessService.DESTINATION_HELLO_WORLD2);
+        addToBroadcaster(StompBusinessService.DESTINATION_HELLO_WORLD2, ar);
+        runMessage("(.*)? from " + StompBusinessService.DESTINATION_HELLO_WORLD2, ar);
     }
 
     /**
@@ -210,9 +247,38 @@ public class StompInterceptorTest {
      * Tests STOMP service with {@link org.atmosphere.stomp.test.StompBusinessService#sayHello3(org.atmosphere.stomp.test.StompBusinessService.BusinessDto)}
      * signature.
      * </p>
+     *
+     * @throws Exception if test fails
      */
     @Test
     public void stompServiceWithDtoParamTest() throws Exception {
-        runMessage(StompBusinessService.DESTINATION_HELLO_WORLD3, "\\{\"timestamp\":(\\d)*,\\s\"message\":\"hello\"\\}");
+        final AtmosphereResource ar = newAtmosphereResource(StompBusinessService.DESTINATION_HELLO_WORLD3);
+        addToBroadcaster(StompBusinessService.DESTINATION_HELLO_WORLD3, ar);
+        runMessage("\\{\"timestamp\":(\\d)*,\\s\"message\":\"hello\"\\}", ar);
+    }
+
+    /**
+     * <p>
+     * Tests when message are received or not according subscription/unsubscription operations.
+     * </p>
+     *
+     * @throws Exception if test fails
+     */
+    @Test
+    public void subscriptionTest() throws Exception {
+        final AtmosphereResource ar = newAtmosphereResource(StompBusinessService.DESTINATION_HELLO_WORLD2);
+
+        // This fails: the 'onStateChange' declared in runMessage() is never called
+        // However, when we manually add to the broadcaster (what's done when subscription frame is sent), the method is invoked
+        action = Action.SUBSCRIBE;
+        processor.service(ar.getRequest(), ar.getResponse());
+        final BufferedReader reader = new BufferedReader(new StringReader(StompBusinessService.DESTINATION_HELLO_WORLD2));
+        when(ar.getRequest().getReader()).thenReturn(reader);
+        action = Action.SEND;
+        runMessage("(.*)? from " + StompBusinessService.DESTINATION_HELLO_WORLD2, ar);
+
+        // This works when we add manually to the broadcaster...
+        //addToBroadcaster(StompBusinessService.DESTINATION_HELLO_WORLD2, ar);
+        //runMessage("(.*)? from " + StompBusinessService.DESTINATION_HELLO_WORLD2, ar);
     }
 }

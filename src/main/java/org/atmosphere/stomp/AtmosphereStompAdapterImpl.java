@@ -43,19 +43,84 @@ public class AtmosphereStompAdapterImpl implements AtmosphereStompAdapter {
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     /**
-     * {@inheritDoc}
+     * <p>
+     * This interface defined a method with a signature like a procedure to process an handler.
+     * </p>
+     *
+     * @author Guillaume DROUET
+     * @since 2.2
+     * @version 1.0
      */
-    @Override
-    public void subscribe(final AtmosphereResource atmosphereResource, final Map<Header, String> headers) {
-        // TODO
+    private static interface Procedure {
+
+        /**
+         * <p>
+         * Processes an handler.
+         * </p>
+         *
+         * @param handler the handler
+         * @throws IOException if processing fails
+         */
+        void apply(AtmosphereFramework.AtmosphereHandlerWrapper handler) throws IOException;
+    }
+
+    /**
+     * <p>
+     * Gets the handler associated to the mapping specified in the given {@link Header#DESTINATION header} and applies
+     * a procedure on it.
+     * </p>
+     *
+     * @param headers the headers with mapping
+     * @param framework the framework providing the handler
+     * @param call the procedure to call
+     * @throws IOException of procedure fails
+     */
+    private void callHandler(final Map<Header, String> headers, final AtmosphereFramework framework, final Procedure call)
+            throws IOException {
+        final String mapping = headers.get(Header.DESTINATION);
+        final AtmosphereFramework.AtmosphereHandlerWrapper handler = framework.getAtmosphereHandlers().get(mapping);
+
+        if (handler != null) {
+            call.apply(handler);
+        } else {
+            logger.warn("No handler found for destination {}", mapping, new IllegalArgumentException());
+        }
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public void unsubscribe(final AtmosphereResource atmosphereResource, final Map<Header, String> headers) {
-        // TODO
+    public void subscribe(final AtmosphereResource resource, final Map<Header, String> headers, final AtmosphereFramework framework)
+            throws IOException {
+        callHandler(headers, framework, new Procedure() {
+
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public void apply(final AtmosphereFramework.AtmosphereHandlerWrapper handler) throws IOException {
+                handler.broadcaster.addAtmosphereResource(resource);
+            }
+        });
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void unsubscribe(final AtmosphereResource resource, final Map<Header, String> headers, final AtmosphereFramework framework)
+            throws IOException {
+        callHandler(headers, framework, new Procedure() {
+
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public void apply(final AtmosphereFramework.AtmosphereHandlerWrapper handler) {
+                handler.broadcaster.removeAtmosphereResource(resource);
+            }
+        });
     }
 
     /**
@@ -64,15 +129,16 @@ public class AtmosphereStompAdapterImpl implements AtmosphereStompAdapter {
     @Override
     public void send(final AtmosphereResource atmosphereResource, final Map<Header, String> headers, final String body, final AtmosphereFramework framework)
             throws IOException {
-        atmosphereResource.getRequest().setAttribute(StompInterceptor.STOMP_MESSAGE_BODY, body);
-        final String mapping = headers.get(Header.DESTINATION);
-        final AtmosphereFramework.AtmosphereHandlerWrapper handler = framework.getAtmosphereHandlers().get(mapping);
+        callHandler(headers, framework, new Procedure() {
 
-        if (handler != null) {
-            handler.atmosphereHandler.onRequest(atmosphereResource);
-        } else {
-            logger.warn("No handler found for destination {}", mapping, new IllegalArgumentException());
-        }
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public void apply(final AtmosphereFramework.AtmosphereHandlerWrapper handler) throws IOException {
+                handler.atmosphereHandler.onRequest(atmosphereResource);
+            }
+        });
     }
 
     /**

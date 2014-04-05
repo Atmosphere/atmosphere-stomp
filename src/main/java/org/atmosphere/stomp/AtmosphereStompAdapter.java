@@ -50,9 +50,11 @@ public interface AtmosphereStompAdapter {
      *
      * @param atmosphereResource the {@link AtmosphereResource} that sent the subscription frame
      * @param headers the headers extracted from the message that contain the destination path
+     * @param framework the {@link AtmosphereFramework}
+     * @throws IOException if request can't be processed
      * @see org.atmosphere.cpr.Broadcaster#addAtmosphereResource(org.atmosphere.cpr.AtmosphereResource)
      */
-    void subscribe(AtmosphereResource atmosphereResource, Map<Header, String> headers);
+    void subscribe(AtmosphereResource atmosphereResource, Map<Header, String> headers, AtmosphereFramework framework) throws IOException;
 
     /**
      * <p>
@@ -62,9 +64,11 @@ public interface AtmosphereStompAdapter {
      *
      * @param atmosphereResource the {@link AtmosphereResource} that sent the unsubscription frame
      * @param headers the headers extracted from the message that contain the destination path
+     * @param framework the {@link AtmosphereFramework}
+     * @throws IOException if request can't be processed
      * @see org.atmosphere.cpr.Broadcaster#removeAtmosphereResource(org.atmosphere.cpr.AtmosphereResource)
      */
-    void unsubscribe(AtmosphereResource atmosphereResource, Map<Header, String> headers);
+    void unsubscribe(AtmosphereResource atmosphereResource, Map<Header, String> headers, AtmosphereFramework framework) throws IOException;
 
     /**
      * <p>
