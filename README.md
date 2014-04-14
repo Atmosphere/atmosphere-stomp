@@ -1,8 +1,6 @@
 Stomp for Atmosphere.
 
 TBD:
-- Use our own parser our use an existing own like activemq
-    JFA => Use activemq. It's Apache 2 license.
 - Validate the implementation proposal for stomp transaction mechanism. If yes:
     - Attach the transaction lifecycle to the AtmosphereResource inside core framework ?
         JFA => +1. The protocol info should be removed so the resource acts like a normal request (without stomp)
