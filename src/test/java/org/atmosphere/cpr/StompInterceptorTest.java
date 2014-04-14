@@ -187,6 +187,7 @@ public class StompInterceptorTest {
      * @throws Exception if test fails
      */
     private void runMessage(final String regex, final AtmosphereResource ar) throws Exception {
+
         // Wait until message has been broadcasted
         final CountDownLatch countDownLatch = new CountDownLatch(1);
         final AtomicReference<String> broadcast = new AtomicReference<String>();
