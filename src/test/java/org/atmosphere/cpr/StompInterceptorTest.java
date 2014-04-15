@@ -38,12 +38,12 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Pattern;
 
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 import static org.testng.Assert.assertTrue;
 
 /**
@@ -146,22 +146,20 @@ public class StompInterceptorTest {
      * @throws Exception if creation fails
      */
     private AtmosphereResource newAtmosphereResource(final String destination) throws Exception {
-        // Mock intercepted request/resource
-        final AtmosphereRequest req = mock(AtmosphereRequest.class);
-        when(req.getAttribute(StompInterceptor.STOMP_MESSAGE_BODY)).thenReturn(String.format("{\"timestamp\":%d, \"message\":\"%s\"}", System.currentTimeMillis(), "hello"));
+        final AtmosphereRequest req = new AtmosphereRequest.Builder()
+                .pathInfo(destination)
+                .method("GET")
+                .reader(new StringReader(destination))
+                .build();
+        req.setAttribute(StompInterceptor.STOMP_MESSAGE_BODY, String.format("{\"timestamp\":%d, \"message\":\"%s\"}", System.currentTimeMillis(), "hello"));
 
-        final AtmosphereResponse res = mock(AtmosphereResponse.class);
-        when(res.request()).thenReturn(req);
+        final AtmosphereResponse res = AtmosphereResponse.newInstance();
 
         // Add an AtmosphereResource that receives a BroadcastMessage
         final AtmosphereHandler ah = mock(AtmosphereHandler.class);
         final AtmosphereResource ar = new AtmosphereResourceImpl();
         final Broadcaster b = framework.getBroadcasterFactory().lookup(destination);
         ar.initialize(config, b, req, res, framework.asyncSupport, ah);
-
-        // Indicates the destination in request
-        final BufferedReader reader = new BufferedReader(new StringReader(destination));
-        when(req.getReader()).thenReturn(reader);
 
         return ar;
     }
@@ -189,15 +187,26 @@ public class StompInterceptorTest {
      * @throws Exception if test fails
      */
     private void runMessage(final String regex, final AtmosphereResource ar) throws Exception {
+
         // Wait until message has been broadcasted
         final CountDownLatch countDownLatch = new CountDownLatch(1);
-        final StringBuilder broadcast = new StringBuilder();
+        final AtomicReference<String> broadcast = new AtomicReference<String>();
 
         // Release lock when message is broadcasted
+        ar.getResponse().asyncIOWriter(new AsyncIOWriterAdapter() {
+            @Override
+            public AsyncIOWriter write(AtmosphereResponse r, byte[] data) throws IOException {
+                broadcast.set(new String(data));
+                countDownLatch.countDown();
+                return this;
+            }
+        });
+
+        // we also need to intercept AtmosphereHandler call
         doAnswer(new Answer() {
             @Override
             public Object answer(final InvocationOnMock invocationOnMock) throws Throwable {
-                broadcast.append(((AtmosphereResourceEvent) invocationOnMock.getArguments()[0]).getMessage());
+                broadcast.set(String.valueOf(((AtmosphereResourceEvent) invocationOnMock.getArguments()[0]).getMessage()));
                 countDownLatch.countDown();
                 return null;
             }
@@ -267,18 +276,9 @@ public class StompInterceptorTest {
     @Test
     public void subscriptionTest() throws Exception {
         final AtmosphereResource ar = newAtmosphereResource(StompBusinessService.DESTINATION_HELLO_WORLD2);
-
-        // This fails: the 'onStateChange' declared in runMessage() is never called
-        // However, when we manually add to the broadcaster (what's done when subscription frame is sent), the method is invoked
         action = Action.SUBSCRIBE;
         processor.service(ar.getRequest(), ar.getResponse());
-        final BufferedReader reader = new BufferedReader(new StringReader(StompBusinessService.DESTINATION_HELLO_WORLD2));
-        when(ar.getRequest().getReader()).thenReturn(reader);
         action = Action.SEND;
         runMessage("(.*)? from " + StompBusinessService.DESTINATION_HELLO_WORLD2, ar);
-
-        // This works when we add manually to the broadcaster...
-        //addToBroadcaster(StompBusinessService.DESTINATION_HELLO_WORLD2, ar);
-        //runMessage("(.*)? from " + StompBusinessService.DESTINATION_HELLO_WORLD2, ar);
     }
 }
