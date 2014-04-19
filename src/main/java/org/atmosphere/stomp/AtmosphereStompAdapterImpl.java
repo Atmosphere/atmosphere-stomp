@@ -118,7 +118,11 @@ public class AtmosphereStompAdapterImpl implements AtmosphereStompAdapter {
              */
             @Override
             public void apply(final AtmosphereFramework.AtmosphereHandlerWrapper handler) {
-                handler.broadcaster.removeAtmosphereResource(resource);
+                for (final AtmosphereResource ar : handler.broadcaster.getAtmosphereResources()) {
+                    if (ar.getRequest().equals(resource.getRequest()) && ar.getResponse().equals(resource.getResponse())) {
+                        handler.broadcaster.removeAtmosphereResource(ar);
+                    }
+                }
             }
         });
     }
