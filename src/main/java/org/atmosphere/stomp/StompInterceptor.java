@@ -18,6 +18,7 @@
 package org.atmosphere.stomp;
 
 import org.atmosphere.cpr.*;
+import org.atmosphere.cpr.Action;
 import org.atmosphere.stomp.protocol.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -181,12 +182,18 @@ public class StompInterceptor extends AtmosphereInterceptorAdapter {
     @Override
     public org.atmosphere.cpr.Action inspect(final AtmosphereResource r) {
         try {
-            final Frame message = stompFormat.parse(r.getRequest().getReader().readLine());
+            final String body = r.getRequest().getReader().readLine();
+
+            if (body == null) {
+                return Action.SUSPEND;
+            }
+
+            final Frame message = stompFormat.parse(body);
 
             switch (message.getAction()) {
                 case SEND:
                     adapter.send(r, message.getHeaders(), message.getBody(), framework);
-                    break;
+                    return Action.CONTINUE;
                 case SUBSCRIBE:
                     adapter.subscribe(r, message.getHeaders(), framework);
                     break;
@@ -198,6 +205,7 @@ public class StompInterceptor extends AtmosphereInterceptorAdapter {
             logger.error("STOMP interceptor fails", ioe);
         }
 
-        return super.inspect(r);
+
+        return Action.SKIP_ATMOSPHEREHANDLER;
     }
 }
