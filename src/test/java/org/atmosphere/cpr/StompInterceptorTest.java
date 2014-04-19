@@ -44,6 +44,7 @@ import java.util.regex.Pattern;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 import static org.testng.Assert.assertTrue;
 
 /**
@@ -142,14 +143,16 @@ public class StompInterceptorTest {
      * </p>
      *
      * @param destination the destination in the request
+     * @param reader the request reader we should use if not {@code null}
      * @return the resource
      * @throws Exception if creation fails
      */
-    private AtmosphereResource newAtmosphereResource(final String destination) throws Exception {
+    private AtmosphereResource newAtmosphereResource(final String destination, final Reader reader)
+            throws Exception {
         final AtmosphereRequest req = new AtmosphereRequest.Builder()
                 .pathInfo(destination)
                 .method("GET")
-                .reader(new StringReader(destination))
+                .reader(reader != null ? reader : new StringReader(destination))
                 .build();
         req.setAttribute(StompInterceptor.STOMP_MESSAGE_BODY, String.format("{\"timestamp\":%d, \"message\":\"%s\"}", System.currentTimeMillis(), "hello"));
 
@@ -195,7 +198,7 @@ public class StompInterceptorTest {
         // Release lock when message is broadcasted
         ar.getResponse().asyncIOWriter(new AsyncIOWriterAdapter() {
             @Override
-            public AsyncIOWriter write(AtmosphereResponse r, byte[] data) throws IOException {
+            public AsyncIOWriter write(final AtmosphereResponse r, final byte[] data) throws IOException {
                 broadcast.set(new String(data));
                 countDownLatch.countDown();
                 return this;
@@ -231,7 +234,7 @@ public class StompInterceptorTest {
      */
     @Test
     public void stompServiceWithBroadcasterParamTest() throws Exception {
-        final AtmosphereResource ar = newAtmosphereResource(StompBusinessService.DESTINATION_HELLO_WORLD);
+        final AtmosphereResource ar = newAtmosphereResource(StompBusinessService.DESTINATION_HELLO_WORLD, null);
         addToBroadcaster(StompBusinessService.DESTINATION_HELLO_WORLD, ar);
         runMessage("(.*)? from " + StompBusinessService.DESTINATION_HELLO_WORLD, ar);
     }
@@ -246,7 +249,7 @@ public class StompInterceptorTest {
      */
     @Test
     public void stompServiceWithoutBroadcasterParamTest() throws Exception {
-        final AtmosphereResource ar = newAtmosphereResource(StompBusinessService.DESTINATION_HELLO_WORLD2);
+        final AtmosphereResource ar = newAtmosphereResource(StompBusinessService.DESTINATION_HELLO_WORLD2, null);
         addToBroadcaster(StompBusinessService.DESTINATION_HELLO_WORLD2, ar);
         runMessage("(.*)? from " + StompBusinessService.DESTINATION_HELLO_WORLD2, ar);
     }
@@ -261,24 +264,60 @@ public class StompInterceptorTest {
      */
     @Test
     public void stompServiceWithDtoParamTest() throws Exception {
-        final AtmosphereResource ar = newAtmosphereResource(StompBusinessService.DESTINATION_HELLO_WORLD3);
+        final AtmosphereResource ar = newAtmosphereResource(StompBusinessService.DESTINATION_HELLO_WORLD3, null);
         addToBroadcaster(StompBusinessService.DESTINATION_HELLO_WORLD3, ar);
         runMessage("\\{\"timestamp\":(\\d)*,\\s\"message\":\"hello\"\\}", ar);
     }
 
     /**
      * <p>
-     * Tests when message are received or not according subscription/unsubscription operations.
+     * Tests when message are received according to subscription operations.
      * </p>
      *
      * @throws Exception if test fails
      */
     @Test
     public void subscriptionTest() throws Exception {
-        final AtmosphereResource ar = newAtmosphereResource(StompBusinessService.DESTINATION_HELLO_WORLD2);
+        final StringReader reader = new StringReader(StompBusinessService.DESTINATION_HELLO_WORLD2);
+        final AtmosphereResource ar = newAtmosphereResource(StompBusinessService.DESTINATION_HELLO_WORLD2, reader);
         action = Action.SUBSCRIBE;
         processor.service(ar.getRequest(), ar.getResponse());
         action = Action.SEND;
+        reader.reset();
         runMessage("(.*)? from " + StompBusinessService.DESTINATION_HELLO_WORLD2, ar);
+    }
+
+    /**
+     * <p>
+     * Tests when message are not received according to unsubscription operations.
+     * </p>
+     *
+     * @throws Exception if test fails
+     */
+    @Test
+    public void unsubscriptionTest() throws Exception {
+
+        // Build resource
+        final StringReader reader = new StringReader(StompBusinessService.DESTINATION_HELLO_WORLD2);
+        final AtmosphereResource ar = newAtmosphereResource(StompBusinessService.DESTINATION_HELLO_WORLD2, reader);
+
+        // Simulate suspend
+        reader.skip(StompBusinessService.DESTINATION_HELLO_WORLD2.length());
+        processor.service(ar.getRequest(), ar.getResponse());
+
+        // Subscribe...
+        action = Action.SUBSCRIBE;
+        reader.reset();
+        processor.service(ar.getRequest(), ar.getResponse());
+
+        // ... then unsubscribe...
+        action = Action.UNSUBSCRIBE;
+        reader.reset();
+        processor.service(ar.getRequest(), ar.getResponse());
+
+        // ... finally we should not receive message
+        action = Action.SEND;
+        reader.reset();
+        runMessage("null", ar);
     }
 }
