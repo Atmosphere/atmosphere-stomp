@@ -119,7 +119,7 @@ public class AtmosphereStompAdapterImpl implements AtmosphereStompAdapter {
             @Override
             public void apply(final AtmosphereFramework.AtmosphereHandlerWrapper handler) {
                 for (final AtmosphereResource ar : handler.broadcaster.getAtmosphereResources()) {
-                    if (ar.getRequest().equals(resource.getRequest()) && ar.getResponse().equals(resource.getResponse())) {
+                    if (ar.uuid().equals(resource.uuid())) {
                         handler.broadcaster.removeAtmosphereResource(ar);
                     }
                 }
@@ -140,6 +140,8 @@ public class AtmosphereStompAdapterImpl implements AtmosphereStompAdapter {
              */
             @Override
             public void apply(final AtmosphereFramework.AtmosphereHandlerWrapper handler) throws IOException {
+                atmosphereResource.getRequest().setAttribute(StompInterceptor.STOMP_MESSAGE_BODY,
+                        body != null && body.endsWith("\n") ? body.substring(0, body.length() - 1) : body);
                 handler.atmosphereHandler.onRequest(atmosphereResource);
             }
         });
