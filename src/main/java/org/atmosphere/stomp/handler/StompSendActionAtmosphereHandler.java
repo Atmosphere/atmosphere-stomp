@@ -15,7 +15,7 @@
  */
 
 
-package org.atmosphere.stomp;
+package org.atmosphere.stomp.handler;
 
 import org.atmosphere.config.managed.Decoder;
 import org.atmosphere.config.managed.Encoder;
@@ -23,6 +23,7 @@ import org.atmosphere.config.service.Message;
 import org.atmosphere.cpr.AtmosphereResource;
 import org.atmosphere.cpr.Broadcaster;
 import org.atmosphere.handler.AbstractReflectorAtmosphereHandler;
+import org.atmosphere.stomp.StompInterceptor;
 import org.atmosphere.stomp.annotation.StompEndpoint;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,15 +34,16 @@ import java.lang.reflect.Method;
 
 /**
  * <p>
- * This handler wraps the method to be invoked when a stomp frame is sent with a particular
- * {@link org.atmosphere.stomp.protocol.Header#DESTINATION destination}.
+ * This handler wraps the method to be invoked when the {@link org.atmosphere.stomp.protocol.Action#SEND send} action is performed
+ * with a STOMP frame. The frame indicates the particular {@link org.atmosphere.stomp.protocol.Header#DESTINATION destination}
+ * which is mapped to the appropriate annotated method.
  * </p>
  *
  * @author Guillaume DROUET
  * @since 2.2
  * @version 1.0
  */
-public class StompAtmosphereHandler extends AbstractReflectorAtmosphereHandler {
+public class StompSendActionAtmosphereHandler extends AbstractReflectorAtmosphereHandler {
 
     /**
      * Method signature requirement message.
@@ -93,11 +95,11 @@ public class StompAtmosphereHandler extends AbstractReflectorAtmosphereHandler {
      * @param decoder converts returned type into {@code String} wrapped in text frame
      * @param broadcaster the broadcaster associated to the destination declared in the annotated method
      */
-    public StompAtmosphereHandler(final Object toProxy,
-                                  final Method method,
-                                  final Encoder<Object, String> encoder,
-                                  final Decoder<String, ?> decoder,
-                                  final Broadcaster broadcaster) {
+    public StompSendActionAtmosphereHandler(final Object toProxy,
+                                            final Method method,
+                                            final Encoder<Object, String> encoder,
+                                            final Decoder<String, ?> decoder,
+                                            final Broadcaster broadcaster) {
         this.toProxy = toProxy;
         this.method = method;
         this.encoder = encoder;

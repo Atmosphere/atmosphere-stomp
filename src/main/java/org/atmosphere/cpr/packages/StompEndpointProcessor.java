@@ -15,7 +15,7 @@
  */
 
 
-package org.atmosphere.stomp.annotation;
+package org.atmosphere.cpr.packages;
 
 import org.atmosphere.annotation.Processor;
 import org.atmosphere.config.AtmosphereAnnotation;
@@ -23,7 +23,9 @@ import org.atmosphere.config.managed.Decoder;
 import org.atmosphere.config.managed.Encoder;
 import org.atmosphere.config.service.Message;
 import org.atmosphere.cpr.AtmosphereFramework;
-import org.atmosphere.stomp.StompAtmosphereHandler;
+import org.atmosphere.stomp.annotation.StompEndpoint;
+import org.atmosphere.stomp.annotation.StompService;
+import org.atmosphere.stomp.handler.StompSendActionAtmosphereHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,13 +33,13 @@ import java.lang.reflect.Method;
 
 /**
  * <p>
- * This processor handles classes annotated with {@link StompEndpoint}. Any annotated class should provides several
- * methods annotated with {@link StompService}. Each annotated method should point to a different
+ * This processor handles classes annotated with {@link org.atmosphere.stomp.annotation.StompEndpoint}. Any annotated class should provides several
+ * methods annotated with {@link org.atmosphere.stomp.annotation.StompService}. Each annotated method should point to a different
  * {@link org.atmosphere.stomp.annotation.StompService#destination()}.
  * </p>
  *
  * <p>
- * When a method is discovered, an {@link StompAtmosphereHandler} is associated to it. Moreover, this processor
+ * When a method is discovered, an {@link org.atmosphere.stomp.handler.StompSendActionAtmosphereHandler} is associated to it. Moreover, this processor
  * creates a mapping for a {@link org.atmosphere.cpr.Broadcaster} which corresponds to the value returned by
  * {@link org.atmosphere.stomp.annotation.StompService#destination()}.
  * </p>
@@ -111,7 +113,7 @@ public class StompEndpointProcessor implements Processor<Object> {
 
                     // Now add to the framework the handler for the declared destination
                     try {
-                        framework.addAtmosphereHandler(destination, new StompAtmosphereHandler(instance, m, encoder, decoder,
+                        framework.addAtmosphereHandler(destination, new StompSendActionAtmosphereHandler(instance, m, encoder, decoder,
                                 framework.getBroadcasterFactory().get(destination)));
                     } catch (IllegalArgumentException iae) {
                         logger.warn("Method {} has not the required signature to be a {}", m.getName(), iae);
