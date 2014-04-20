@@ -52,7 +52,6 @@ public class StompBusinessService {
      */
     public static final String DESTINATION_HELLO_WORLD3 = "/Hello World3!";
 
-
     /**
      * <p>
      * A basic DTO for test purpose using the {@link Message} annotation.

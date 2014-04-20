@@ -18,11 +18,8 @@
 package org.atmosphere.cpr;
 
 import org.atmosphere.stomp.StompInterceptor;
-import org.atmosphere.stomp.annotation.StompEndpointProcessor;
+import org.atmosphere.cpr.packages.StompEndpointProcessor;
 import org.atmosphere.stomp.protocol.Action;
-import org.atmosphere.stomp.protocol.Frame;
-import org.atmosphere.stomp.protocol.Header;
-import org.atmosphere.stomp.protocol.StompFormat;
 import org.atmosphere.stomp.test.StompBusinessService;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
@@ -34,8 +31,6 @@ import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import java.io.*;
 import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
@@ -44,7 +39,6 @@ import java.util.regex.Pattern;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 import static org.testng.Assert.assertTrue;
 
 /**
@@ -64,25 +58,6 @@ public class StompInterceptorTest {
     private static Action action = Action.SEND;
 
     /**
-     * Simple {@link StompFormat} for test purpose.
-     */
-    public static class StompFormatTest implements StompFormat {
-
-        @Override
-        public Frame parse(final String str) {
-            // Request's reader just returned the destination value
-            final Map<Header, String> headers = new HashMap<Header, String>();
-            headers.put(Header.DESTINATION, str);
-            return new Frame(action, headers, "");
-        }
-
-        @Override
-        public String format(final Frame msg) {
-            return "";
-        }
-    }
-
-    /**
      * <p>
      * Initializes framework.
      * </p>
@@ -92,7 +67,6 @@ public class StompInterceptorTest {
     @BeforeMethod
     public void create() throws Throwable {
         framework = new AtmosphereFramework();
-        framework.setAsyncSupport(mock(AsyncSupport.class));
 
         // Detect processor
         framework.addCustomAnnotationPackage(StompEndpointProcessor.class);
@@ -101,7 +75,6 @@ public class StompInterceptorTest {
         framework.addAnnotationPackage(StompBusinessService.class);
 
         // Global handler: mandatory
-        framework.addAtmosphereHandler("/*", mock(AtmosphereHandler.class));
         framework.init(new ServletConfig() {
             @Override
             public String getServletName() {
@@ -115,8 +88,7 @@ public class StompInterceptorTest {
 
             @Override
             public String getInitParameter(final String name) {
-                // Specify StompFormat for tests
-                return StompInterceptor.PropertyClass.STOMP_FORMAT_CLASS.toString().equals(name) ? StompFormatTest.class.getName() : null;
+                return null;
             }
 
             @Override
@@ -126,6 +98,7 @@ public class StompInterceptorTest {
         });
 
         config = framework.getAtmosphereConfig();
+
         processor = new AsynchronousProcessor(config) {
             @Override
             public org.atmosphere.cpr.Action service(AtmosphereRequest req, AtmosphereResponse res) throws IOException, ServletException {
@@ -133,8 +106,60 @@ public class StompInterceptorTest {
             }
         };
 
+        framework.setAsyncSupport(processor);
+
         // Configure interceptor
         framework.interceptor(new StompInterceptor());
+    }
+
+    /**
+     * <p>
+     * Returns the frame to read.
+     * </p>
+     *
+     * @param destination the destination's header value
+     * @return the string representation
+     */
+    private String toRead(final String destination) {
+        return action.toString()
+                + "\n"
+                + "destination:"
+                + destination
+                + "\n"
+                + "content-type:text/plain\n"
+                + "\n"
+                + String.format("{\"timestamp\":%d, \"message\":\"%s\"}", System.currentTimeMillis(), "hello");
+    }
+
+    /**
+     * <p>
+     * Builds a new request
+     * </p>
+     *
+     * @param destination the destination's header value in the request frame
+     * @return the request
+     */
+    private AtmosphereRequest newRequest(final String destination) {
+        final AtmosphereRequest req = new AtmosphereRequest.Builder()
+                .pathInfo(destination)
+                .method("GET")
+                .body(toRead(destination))
+                .build();
+
+        req.setAttribute(ApplicationConfig.SUSPENDED_ATMOSPHERE_RESOURCE_UUID, "4000");
+
+        return req;
+    }
+
+    /**
+     * <p>
+     * Builds a new response.
+     * </p>
+     *
+     * @return the response
+     */
+    private AtmosphereResponse newResponse() {
+        return AtmosphereResponse.newInstance();
     }
 
     /**
@@ -143,26 +168,27 @@ public class StompInterceptorTest {
      * </p>
      *
      * @param destination the destination in the request
-     * @param reader the request reader we should use if not {@code null}
+     * @param req the request
+     * @param res the response
+     * @param bindToRequest {@code true} if the created resource should be added to request attributes
      * @return the resource
      * @throws Exception if creation fails
      */
-    private AtmosphereResource newAtmosphereResource(final String destination, final Reader reader)
+    private AtmosphereResource newAtmosphereResource(final String destination,
+                                                     final AtmosphereRequest req,
+                                                     final AtmosphereResponse res,
+                                                     final boolean bindToRequest)
             throws Exception {
-        final AtmosphereRequest req = new AtmosphereRequest.Builder()
-                .pathInfo(destination)
-                .method("GET")
-                .reader(reader != null ? reader : new StringReader(destination))
-                .build();
-        req.setAttribute(StompInterceptor.STOMP_MESSAGE_BODY, String.format("{\"timestamp\":%d, \"message\":\"%s\"}", System.currentTimeMillis(), "hello"));
-
-        final AtmosphereResponse res = AtmosphereResponse.newInstance();
 
         // Add an AtmosphereResource that receives a BroadcastMessage
         final AtmosphereHandler ah = mock(AtmosphereHandler.class);
         final AtmosphereResource ar = new AtmosphereResourceImpl();
         final Broadcaster b = framework.getBroadcasterFactory().lookup(destination);
         ar.initialize(config, b, req, res, framework.asyncSupport, ah);
+
+        if (bindToRequest) {
+            req.setAttribute(FrameworkConfig.INJECTED_ATMOSPHERE_RESOURCE, ar);
+        }
 
         return ar;
     }
@@ -189,7 +215,13 @@ public class StompInterceptorTest {
      * @param regex the expected regex
      * @throws Exception if test fails
      */
-    private void runMessage(final String regex, final AtmosphereResource ar) throws Exception {
+    private void runMessage(final String regex,
+                            final String destination,
+                            final AtmosphereRequest req,
+                            final AtmosphereResponse res,
+                            final boolean addToBroadcaster)
+            throws Exception {
+        final AtmosphereResource ar = newAtmosphereResource(destination, req, res, false);
 
         // Wait until message has been broadcasted
         final CountDownLatch countDownLatch = new CountDownLatch(1);
@@ -215,10 +247,14 @@ public class StompInterceptorTest {
             }
         }).when(ar.getAtmosphereHandler()).onStateChange(any(AtmosphereResourceEvent.class));
 
+        if (addToBroadcaster) {
+            addToBroadcaster(destination, ar);
+        }
+
         // Run interceptor
         processor.service(ar.getRequest(), ar.getResponse());
 
-        countDownLatch.await(5, TimeUnit.SECONDS);
+        countDownLatch.await(3, TimeUnit.SECONDS);
 
         // Expect that broadcaster's resource receives message from STOMP service
         assertTrue(Pattern.matches(regex, broadcast.toString()));
@@ -234,9 +270,8 @@ public class StompInterceptorTest {
      */
     @Test
     public void stompServiceWithBroadcasterParamTest() throws Exception {
-        final AtmosphereResource ar = newAtmosphereResource(StompBusinessService.DESTINATION_HELLO_WORLD, null);
-        addToBroadcaster(StompBusinessService.DESTINATION_HELLO_WORLD, ar);
-        runMessage("(.*)? from " + StompBusinessService.DESTINATION_HELLO_WORLD, ar);
+        final String destination = StompBusinessService.DESTINATION_HELLO_WORLD;
+        runMessage("(.*)? from " + destination, destination, newRequest(destination), newResponse(), true);
     }
 
     /**
@@ -249,9 +284,8 @@ public class StompInterceptorTest {
      */
     @Test
     public void stompServiceWithoutBroadcasterParamTest() throws Exception {
-        final AtmosphereResource ar = newAtmosphereResource(StompBusinessService.DESTINATION_HELLO_WORLD2, null);
-        addToBroadcaster(StompBusinessService.DESTINATION_HELLO_WORLD2, ar);
-        runMessage("(.*)? from " + StompBusinessService.DESTINATION_HELLO_WORLD2, ar);
+        final String destination = StompBusinessService.DESTINATION_HELLO_WORLD2;
+        runMessage("(.*)? from " + destination, destination, newRequest(destination), newResponse(), true);
     }
 
     /**
@@ -264,9 +298,8 @@ public class StompInterceptorTest {
      */
     @Test
     public void stompServiceWithDtoParamTest() throws Exception {
-        final AtmosphereResource ar = newAtmosphereResource(StompBusinessService.DESTINATION_HELLO_WORLD3, null);
-        addToBroadcaster(StompBusinessService.DESTINATION_HELLO_WORLD3, ar);
-        runMessage("\\{\"timestamp\":(\\d)*,\\s\"message\":\"hello\"\\}", ar);
+        final String destination = StompBusinessService.DESTINATION_HELLO_WORLD3;
+        runMessage("\\{\"timestamp\":(\\d)*,\\s\"message\":\"hello\"\\}", destination, newRequest(destination), newResponse(), true);
     }
 
     /**
@@ -278,13 +311,12 @@ public class StompInterceptorTest {
      */
     @Test
     public void subscriptionTest() throws Exception {
-        final StringReader reader = new StringReader(StompBusinessService.DESTINATION_HELLO_WORLD2);
-        final AtmosphereResource ar = newAtmosphereResource(StompBusinessService.DESTINATION_HELLO_WORLD2, reader);
+        final AtmosphereResponse response = newResponse();
+        final String destination = StompBusinessService.DESTINATION_HELLO_WORLD2;
         action = Action.SUBSCRIBE;
-        processor.service(ar.getRequest(), ar.getResponse());
+        processor.service(newRequest(destination), response);
         action = Action.SEND;
-        reader.reset();
-        runMessage("(.*)? from " + StompBusinessService.DESTINATION_HELLO_WORLD2, ar);
+        runMessage("(.*)? from " + destination, destination, newRequest(destination), response, false);
     }
 
     /**
@@ -296,28 +328,22 @@ public class StompInterceptorTest {
      */
     @Test
     public void unsubscriptionTest() throws Exception {
-
-        // Build resource
-        final StringReader reader = new StringReader(StompBusinessService.DESTINATION_HELLO_WORLD2);
-        final AtmosphereResource ar = newAtmosphereResource(StompBusinessService.DESTINATION_HELLO_WORLD2, reader);
-
-        // Simulate suspend
-        reader.skip(StompBusinessService.DESTINATION_HELLO_WORLD2.length());
-        processor.service(ar.getRequest(), ar.getResponse());
+        final AtmosphereResponse response = newResponse();
+        final String destination = StompBusinessService.DESTINATION_HELLO_WORLD2;
 
         // Subscribe...
         action = Action.SUBSCRIBE;
-        reader.reset();
-        processor.service(ar.getRequest(), ar.getResponse());
+        AtmosphereResource ar = newAtmosphereResource(destination, newRequest(destination), response, true);
+        processor.service(ar.getRequest(), response);
 
         // ... then unsubscribe...
         action = Action.UNSUBSCRIBE;
-        reader.reset();
-        processor.service(ar.getRequest(), ar.getResponse());
+        ar = newAtmosphereResource(destination, newRequest(destination), response, true);
+        processor.service(ar.getRequest(), response);
 
         // ... finally we should not receive message
         action = Action.SEND;
-        reader.reset();
-        runMessage("null", ar);
+        ar = newAtmosphereResource(destination, newRequest(destination), response, true);
+        runMessage("null", destination, ar.getRequest(), response, false);
     }
 }
