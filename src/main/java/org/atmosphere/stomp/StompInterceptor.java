@@ -19,7 +19,9 @@ package org.atmosphere.stomp;
 
 import org.atmosphere.cpr.*;
 import org.atmosphere.cpr.Action;
+import org.atmosphere.stomp.handler.StompGlobalAtmosphereHandler;
 import org.atmosphere.stomp.protocol.*;
+import org.atmosphere.util.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -174,6 +176,9 @@ public class StompInterceptor extends AtmosphereInterceptorAdapter {
         framework = config.framework();
         stompFormat = PropertyClass.STOMP_FORMAT_CLASS.retrieve(StompFormat.class, config);
         adapter = PropertyClass.ADAPTER_CLASS.retrieve(AtmosphereStompAdapter.class, config);
+
+        // TODO: user must map AtmosphereServlet to /stomp in web.xml, can we offer a chance to set a custom location ?
+        framework.addAtmosphereHandler("/stomp", new StompGlobalAtmosphereHandler());
     }
 
     /**
@@ -181,19 +186,22 @@ public class StompInterceptor extends AtmosphereInterceptorAdapter {
      */
     @Override
     public org.atmosphere.cpr.Action inspect(final AtmosphereResource r) {
-        try {
-            final String body = r.getRequest().getReader().readLine();
+        StringBuilder body = null;
 
-            if (body == null) {
-                return Action.SUSPEND;
+        try {
+            body = IOUtils.readEntirelyAsString(r);
+
+            // Let the global handler suspend the connection if no action is submitted
+            if (body.length() == 0) {
+                return Action.CONTINUE;
             }
 
-            final Frame message = stompFormat.parse(body);
+            final Frame message = stompFormat.parse(body.toString());
 
             switch (message.getAction()) {
                 case SEND:
                     adapter.send(r, message.getHeaders(), message.getBody(), framework);
-                    return Action.CONTINUE;
+                    break;
                 case SUBSCRIBE:
                     adapter.subscribe(r, message.getHeaders(), framework);
                     break;
@@ -203,8 +211,9 @@ public class StompInterceptor extends AtmosphereInterceptorAdapter {
             }
         } catch (final IOException ioe) {
             logger.error("STOMP interceptor fails", ioe);
+        } catch (final ParseException pe) {
+            logger.error("Invalid STOMP string: {} ", body, pe);
         }
-
 
         return Action.SKIP_ATMOSPHEREHANDLER;
     }
