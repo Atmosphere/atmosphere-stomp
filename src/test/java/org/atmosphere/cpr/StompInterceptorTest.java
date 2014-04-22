@@ -182,12 +182,20 @@ public class StompInterceptorTest {
 
         // Add an AtmosphereResource that receives a BroadcastMessage
         final AtmosphereHandler ah = mock(AtmosphereHandler.class);
-        final AtmosphereResource ar = new AtmosphereResourceImpl();
-        final Broadcaster b = framework.getBroadcasterFactory().lookup(destination);
-        ar.initialize(config, b, req, res, framework.asyncSupport, ah);
+        AtmosphereResource ar = framework.arFactory.find("4000");
+
+        if (ar == null) {
+            ar = new AtmosphereResourceImpl();
+            final Broadcaster b = framework.getBroadcasterFactory().lookup(destination);
+            ar.initialize(config, b, req, res, framework.asyncSupport, ah);
+        } else {
+            ar.getRequest().body(req.getInputStream());
+            ((AtmosphereResourceImpl) ar).atmosphereHandler(ah);
+        }
 
         if (bindToRequest) {
             req.setAttribute(FrameworkConfig.INJECTED_ATMOSPHERE_RESOURCE, ar);
+            framework.arFactory.resources().put(ar.uuid(), ar);
         }
 
         return ar;
