@@ -1,16 +1,47 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-	<parent>
-		<groupId>org.atmosphere</groupId>
-		<artifactId>atmosphere-project</artifactId>
-		<version>2.2.0-SNAPSHOT</version>
-	</parent>
-	<modelVersion>4.0.0</modelVersion>
-	<artifactId>atmosphere-stomp</artifactId>
-	<packaging>jar</packaging>
-	<version>1.0.0-SNAPSHOT</version>
-	<name>atmosphere-stomp</name>
-	<url>https://github.com/Atmosphere/atmosphere</url>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <groupId>org.sonatype.oss</groupId>
+        <artifactId>oss-parent</artifactId>
+        <version>5</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>org.atmosphere</groupId>
+    <artifactId>atmosphere-stomp</artifactId>
+    <name>atmosphere-stomp</name>
+    <version>1.0.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
+    <description>
+        STOMP for Atmosphere
+    </description>
+    <url>http://github.com/Atmosphere/atmosphere-stomp</url>
+    <scm>
+        <connection>scm:git:git@github.com:Atmosphere/atmosphere-stomp.git</connection>
+        <developerConnection>scm:git:git@github.com:Atmosphere/atmosphere-stomp.git</developerConnection>
+        <url>http://github.com/Atmosphere/atmosphere-stomp</url>
+    </scm>
+    <prerequisites>
+        <maven>2.2.0</maven>
+    </prerequisites>
+    <developers>
+        <developer>
+            <id>gdrouet</id>
+            <name>Guillaume Drouet</name>
+            <email></email>
+        </developer>
+        <developer>
+            <id>jfarcand</id>
+            <name>Jeanfrancois Arcand</name>
+            <email>jfarcand@apache.org</email>
+        </developer>
+    </developers>
+    <licenses>
+        <license>
+            <name>Apache License 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.html</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
 	<build>
 		<defaultGoal>install</defaultGoal>
 		<plugins>
@@ -67,7 +98,7 @@
 		<dependency>
 			<groupId>org.atmosphere</groupId>
 			<artifactId>atmosphere-runtime</artifactId>
-			<version>${atmosphere-version}</version>
+			<version>${atmosphere.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.geronimo.specs</groupId>
@@ -78,7 +109,7 @@
 		<dependency>
 			<groupId>org.codehaus.jackson</groupId>
 			<artifactId>jackson-mapper-lgpl</artifactId>
-			<version>${jackson-version}</version>
+			<version>${jackson.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>com.fasterxml.jackson.core</groupId>
@@ -93,4 +124,13 @@
             <scope>test</scope>
         </dependency>
 	</dependencies>
+    <properties>
+        <distMgmtSnapshotsUrl>http://oss.sonatype.org/content/repositories/snapshots</distMgmtSnapshotsUrl>
+        <surefire.redirectTestOutputToFile>false</surefire.redirectTestOutputToFile>
+        <source.property>1.6</source.property>
+        <target.property>1.6</target.property>
+        <atmosphere.version>2.1.3</atmosphere.version>
+        <felix-version>2.3.7</felix-version>
+        <jackson.version>1.9.13</jackson.version>
+    </properties>
 </project>
