@@ -126,6 +126,9 @@ public class StompInterceptorTest {
                 + "destination:"
                 + destination
                 + "\n"
+                + "id:"
+                + 1
+                + "\n"
                 + "content-type:text/plain\n"
                 + "\n"
                 + String.format("{\"timestamp\":%d, \"message\":\"%s\"}", System.currentTimeMillis(), "hello");
