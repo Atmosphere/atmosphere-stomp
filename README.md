@@ -1,5 +1,5 @@
 ## [STOMP](http://en.wikipedia.org/wiki/Streaming_Text_Oriented_Messaging_Protocol) implementation for the [Atmosphere Framework](https://github.com/Atmosphere/atmosphere)
-### To use Atmosphere STOP, add the following dependency:
+### To use Atmosphere STOMP, add the following dependency:
 ```xml
      <dependency>
          <groupId>org.atmosphere</groupId>
