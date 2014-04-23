@@ -8,4 +8,4 @@
       </dependency>
 ```
 
-Early adopter, check out [demo](https://github.com/Atmosphere/atmosphere-samples/tree/master/stomp) and to get started. File issues, do pull requests to help this community. Have questions? Post them [here](https://groups.google.com/group/atmosphere-framework?pli=1)
+Early adopter, check out our [demo](https://github.com/Atmosphere/atmosphere-samples/tree/master/stomp) to get started. File issues, do pull requests to help this community. Have questions? Post them [here](https://groups.google.com/group/atmosphere-framework?pli=1)
