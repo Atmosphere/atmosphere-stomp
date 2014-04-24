@@ -19,6 +19,7 @@ package org.atmosphere.cpr;
 
 import org.atmosphere.stomp.StompInterceptor;
 import org.atmosphere.cpr.packages.StompEndpointProcessor;
+import org.atmosphere.stomp.Subscriptions;
 import org.atmosphere.stomp.protocol.Action;
 import org.atmosphere.stomp.test.StompBusinessService;
 import org.mockito.invocation.InvocationOnMock;
@@ -55,7 +56,7 @@ public class StompInterceptorTest {
     /**
      * Action injected by formatter. Could be change on the fly inside tests.
      */
-    private static Action action = Action.SEND;
+    private Action action = Action.SEND;
 
     /**
      * <p>
@@ -183,7 +184,7 @@ public class StompInterceptorTest {
                                                      final boolean bindToRequest)
             throws Exception {
 
-        // Add an AtmosphereResource that receives a BroadcastMessage
+        // Add an AtmosphereResource that receives a message
         final AtmosphereHandler ah = mock(AtmosphereHandler.class);
         AtmosphereResource ar = framework.arFactory.find("4000");
 
@@ -192,6 +193,7 @@ public class StompInterceptorTest {
             final Broadcaster b = framework.getBroadcasterFactory().lookup(destination);
             ar.initialize(config, b, req, res, framework.asyncSupport, ah);
         } else {
+            ar.getRequest().body(req.body().asString());
             ar.getRequest().body(req.getInputStream());
             ((AtmosphereResourceImpl) ar).atmosphereHandler(ah);
         }
@@ -214,6 +216,7 @@ public class StompInterceptorTest {
      */
     private void addToBroadcaster(final String destination, final AtmosphereResource ar) {
         final Broadcaster b = framework.getBroadcasterFactory().lookup(destination);
+        Subscriptions.getFromSession(AtmosphereResourceSessionFactory.getDefault().getSession(ar)).addSubscription("1", destination);
         b.addAtmosphereResource(ar);
     }
 
@@ -268,7 +271,11 @@ public class StompInterceptorTest {
         countDownLatch.await(3, TimeUnit.SECONDS);
 
         // Expect that broadcaster's resource receives message from STOMP service
-        assertTrue(Pattern.matches(regex, broadcast.toString()));
+        assertTrue(Pattern.compile(regex, Pattern.DOTALL).matcher(broadcast.toString()).matches(), broadcast.toString());
+
+        if (addToBroadcaster) {
+            Subscriptions.getFromSession(AtmosphereResourceSessionFactory.getDefault().getSession(ar)).removeSubscription("1");
+        }
     }
 
     /**
@@ -282,7 +289,7 @@ public class StompInterceptorTest {
     @Test
     public void stompServiceWithBroadcasterParamTest() throws Exception {
         final String destination = StompBusinessService.DESTINATION_HELLO_WORLD;
-        runMessage("(.*)? from " + destination, destination, newRequest(destination), newResponse(), true);
+        runMessage("(.*)? from " + destination + ".*", destination, newRequest(destination), newResponse(), true);
     }
 
     /**
@@ -296,7 +303,7 @@ public class StompInterceptorTest {
     @Test
     public void stompServiceWithoutBroadcasterParamTest() throws Exception {
         final String destination = StompBusinessService.DESTINATION_HELLO_WORLD2;
-        runMessage("(.*)? from " + destination, destination, newRequest(destination), newResponse(), true);
+        runMessage("(.*)? from " + destination + ".*", destination, newRequest(destination), newResponse(), true);
     }
 
     /**
@@ -310,7 +317,7 @@ public class StompInterceptorTest {
     @Test
     public void stompServiceWithDtoParamTest() throws Exception {
         final String destination = StompBusinessService.DESTINATION_HELLO_WORLD3;
-        runMessage("\\{\"timestamp\":(\\d)*,\\s\"message\":\"hello\"\\}", destination, newRequest(destination), newResponse(), true);
+        runMessage("(.*)?\\{\"timestamp\":(\\d)*,\\s\"message\":\"hello\"\\}.*", destination, newRequest(destination), newResponse(), true);
     }
 
     /**
@@ -327,7 +334,7 @@ public class StompInterceptorTest {
         action = Action.SUBSCRIBE;
         processor.service(newRequest(destination), response);
         action = Action.SEND;
-        runMessage("(.*)? from " + destination, destination, newRequest(destination), response, false);
+        runMessage("(.*)? from " + destination + ".*", destination, newRequest(destination), response, false);
     }
 
     /**

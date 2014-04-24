@@ -1,0 +1,117 @@
+/*
+ * Copyright 2014 Jeanfrancois Arcand
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
+ */
+
+
+package org.atmosphere.stomp;
+
+import org.atmosphere.cpr.*;
+import org.atmosphere.stomp.protocol.Action;
+import org.atmosphere.stomp.protocol.Frame;
+import org.atmosphere.stomp.protocol.Header;
+import org.atmosphere.stomp.protocol.StompFormat;
+
+import java.util.*;
+
+/**
+ * <p>
+ * This filter transforms the broadcasted {@code String} considered as STOMP body to a {@link Action#MESSAGE message}.
+ * A specific frame will be created and broadcasted for each subscription for the mapping (the broadcaster ID).
+ * </p>
+ *
+ * @author Guillaume DROUET
+ * @since 2.2
+ * @version 1.0
+ */
+public class StompBroadcastFilter implements PerRequestBroadcastFilter, BroadcastFilterLifecycle {
+
+    /**
+     * The formatter for frame generation.
+     */
+    private StompFormat stompFormat;
+
+    /**
+     * The factory providing sessions with subscriptions.
+     */
+    private AtmosphereResourceSessionFactory arsf;
+
+    /**
+     * <p>
+     * Builds a new instance.
+     * </p>
+     */
+    public StompBroadcastFilter() {
+        this.arsf = AtmosphereResourceSessionFactory.getDefault();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public BroadcastAction filter(final String broadcasterId,
+                                  final AtmosphereResource atmosphereResource,
+                                  final Object originalMessage,
+                                  final Object message) {
+        // Get the subscriptions
+        final Subscriptions subscriptions = Subscriptions.getFromSession(arsf.getSession(atmosphereResource));
+        final Map<Header, String> headers = new HashMap<Header, String>();
+        headers.put(Header.DESTINATION, broadcasterId);
+
+        final List<String> subscriptionsIds = subscriptions.getSubscriptionsForDestination(broadcasterId);
+        final List<Object> messages = new ArrayList<Object>(subscriptionsIds.size());
+
+        // Generate a frame for each subscription
+        for (final String id : subscriptionsIds) {
+            headers.put(Header.MESSAGE_ID, String.valueOf(UUID.randomUUID()));
+            headers.put(Header.SUBSCRIPTION, id);
+            final Frame frame = new Frame(Action.MESSAGE, headers, String.valueOf(message));
+            messages.add(stompFormat.format(frame));
+        }
+
+        // If the resource is added to the broadcaster that triggered the call to the filter, then at least one subscription must exists
+        if (messages.isEmpty()) {
+            throw new IllegalStateException();
+        } else {
+            // TODO: look for reliable way to broadcast many messages
+            return new BroadcastAction(messages.get(0));
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public BroadcastAction filter(final String broadcasterId, final Object originalMessage, final Object message) {
+        return new BroadcastAction(message);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void init(final AtmosphereConfig config) {
+        stompFormat = StompInterceptor.PropertyClass.STOMP_FORMAT_CLASS.retrieve(StompFormat.class, config);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void destroy() {
+        // Let's gc do its job...
+        this.stompFormat = null;
+        this.arsf = null;
+    }
+}
