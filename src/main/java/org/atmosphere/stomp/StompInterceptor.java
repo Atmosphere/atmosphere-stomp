@@ -17,10 +17,17 @@
 
 package org.atmosphere.stomp;
 
-import org.atmosphere.cpr.*;
 import org.atmosphere.cpr.Action;
+import org.atmosphere.cpr.AtmosphereConfig;
+import org.atmosphere.cpr.AtmosphereFramework;
+import org.atmosphere.cpr.AtmosphereInterceptorAdapter;
+import org.atmosphere.cpr.AtmosphereResource;
+import org.atmosphere.cpr.BroadcastFilterLifecycle;
 import org.atmosphere.stomp.handler.StompGlobalAtmosphereHandler;
-import org.atmosphere.stomp.protocol.*;
+import org.atmosphere.stomp.protocol.Frame;
+import org.atmosphere.stomp.protocol.ParseException;
+import org.atmosphere.stomp.protocol.StompFormat;
+import org.atmosphere.stomp.protocol.StompFormatImpl;
 import org.atmosphere.util.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

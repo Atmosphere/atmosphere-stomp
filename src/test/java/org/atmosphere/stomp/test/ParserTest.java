@@ -17,7 +17,11 @@
 
 package org.atmosphere.stomp.test;
 
-import org.atmosphere.stomp.protocol.*;
+import org.atmosphere.stomp.protocol.Action;
+import org.atmosphere.stomp.protocol.Frame;
+import org.atmosphere.stomp.protocol.Header;
+import org.atmosphere.stomp.protocol.ParseException;
+import org.atmosphere.stomp.protocol.Parser;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
