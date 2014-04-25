@@ -197,6 +197,8 @@ public class StompInterceptor extends AtmosphereInterceptorAdapter {
             // Let the global handler suspend the connection if no action is submitted
             if (body.length() == 0) {
                 return Action.CONTINUE;
+            } else {
+                body.deleteCharAt(body.length() - 1);
             }
 
             final Frame message = stompFormat.parse(body.toString());
