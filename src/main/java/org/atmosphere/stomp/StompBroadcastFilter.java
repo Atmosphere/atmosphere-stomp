@@ -17,13 +17,22 @@
 
 package org.atmosphere.stomp;
 
-import org.atmosphere.cpr.*;
+import org.atmosphere.cpr.AtmosphereResourceSessionFactory;
+import org.atmosphere.cpr.AtmosphereResource;
+import org.atmosphere.cpr.BroadcastFilterLifecycle;
+import org.atmosphere.cpr.PerRequestBroadcastFilter;
+import org.atmosphere.cpr.AtmosphereConfig;
+
 import org.atmosphere.stomp.protocol.Action;
 import org.atmosphere.stomp.protocol.Frame;
 import org.atmosphere.stomp.protocol.Header;
 import org.atmosphere.stomp.protocol.StompFormat;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.UUID;
 
 /**
  * <p>
@@ -66,7 +75,7 @@ public class StompBroadcastFilter implements PerRequestBroadcastFilter, Broadcas
                                   final Object message) {
         // Get the subscriptions
         final Subscriptions subscriptions = Subscriptions.getFromSession(arsf.getSession(atmosphereResource));
-        final Map<Header, String> headers = new HashMap<Header, String>();
+        final Map<String, String> headers = new HashMap<String, String>();
         headers.put(Header.DESTINATION, broadcasterId);
 
         final List<String> subscriptionsIds = subscriptions.getSubscriptionsForDestination(broadcasterId);

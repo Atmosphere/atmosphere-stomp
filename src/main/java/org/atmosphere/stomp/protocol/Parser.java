@@ -122,13 +122,13 @@ public class Parser {
         final Action action = Action.parse(sm.action().toString());
 
         // Read headers
-        final Map<Header, String> headers = new HashMap<Header, String>();
+        final Map<String, String> headers = new HashMap<String, String>();
         final Iterator<Tuple2<AsciiBuffer, AsciiBuffer>> it = sm.headers().iterator();
 
         // TODO: check mandatory headers
         while (it.hasNext()) {
             final Tuple2<AsciiBuffer, AsciiBuffer> tuple = it.next();
-            headers.put(Header.parse(tuple._1().toString()), tuple._2().toString());
+            headers.put(tuple._1().toString(), tuple._2().toString());
         }
 
         // Read body

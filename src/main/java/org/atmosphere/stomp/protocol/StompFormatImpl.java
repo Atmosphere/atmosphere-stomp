@@ -59,7 +59,7 @@ public class StompFormatImpl implements StompFormat {
         final DataByteArrayOutputStream dbaos = new DataByteArrayOutputStream();
         final List<Tuple2<AsciiBuffer, AsciiBuffer>> headers = new ArrayList<Tuple2<AsciiBuffer, AsciiBuffer>>();
 
-        for (final Map.Entry<Header, String> header : msg.getHeaders().entrySet()) {
+        for (final Map.Entry<String, String> header : msg.getHeaders().entrySet()) {
             headers.add(new Tuple2<AsciiBuffer, AsciiBuffer>(new AsciiBuffer(header.getKey().toString().getBytes()), new AsciiBuffer(header.getValue().getBytes())));
         }
 
@@ -67,8 +67,6 @@ public class StompFormatImpl implements StompFormat {
         final StompFrame sf = new StompFrame(new AsciiBuffer("MESSAGE".getBytes()),
                 JavaConversions.asScalaBuffer(headers).toList(), content, false, JavaConversions.asScalaBuffer(new ArrayList<Tuple2<AsciiBuffer, AsciiBuffer>>()).toList());
         new StompCodec().encode(sf, dbaos);
-
-        final String retval = new String(dbaos.getData());
-        return retval.substring(0, retval.lastIndexOf('\n') + 1);
+        return new String(dbaos.getData());
     }
 }

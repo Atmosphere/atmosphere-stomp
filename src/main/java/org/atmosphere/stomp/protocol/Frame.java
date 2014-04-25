@@ -17,32 +17,87 @@
 
 package org.atmosphere.stomp.protocol;
 
+import java.util.Collections;
 import java.util.Map;
 
-public class Frame {
+/**
+ * <p>
+ * In STOMP protocol, the frame basically defines an {@link Action}, some {@link Header headers} and eventually a body.
+ * </p>
+ *
+ * <p>
+ * A frame is immutable.
+ * </p>
+ *
+ * @author Guillaume DROUET
+ * @since 2.2
+ * @version 1.0
+ */
+public final class Frame {
 
-    private Action action;
+    /**
+     * The action.
+     */
+    private final Action action;
 
-    private String body;
+    /**
+     * The body.
+     */
+    private final String body;
 
-    private Map<Header, String> headers;
+    /**
+     * The headers.
+     */
+    private final Map<String, String> headers;
 
-    public Frame(Action action, Map<Header, String> headers, String body) {
+    /**
+     * <p>
+     * Builds a new instance.
+     * </p>
+     *
+     * @param action the action
+     * @param headers the headers
+     * @param body the body
+     */
+    public Frame(final Action action, final Map<String, String> headers, final String body) {
         this.action = action;
-        this.headers = headers;
         this.body = body;
+
+        headers.put(Header.CONTENT_LENGTH, String.valueOf(body == null ? 0 : body.getBytes().length));
+        this.headers = Collections.unmodifiableMap(headers);
+
     }
 
+    /**
+     * <p>
+     * Gets the action.
+     * </p>
+     *
+     * @return
+     */
     public Action getAction() {
         return action;
     }
 
+    /**
+     * <p>
+     * Gets the body.
+     * </p>
+     *
+     * @return the body
+     */
     public String getBody() {
         return body;
     }
 
-    public Map<Header, String> getHeaders() {
+    /**
+     * <p>
+     * Gets the headers.
+     * </p>
+     *
+     * @return the headers
+     */
+    public Map<String, String> getHeaders() {
         return headers;
     }
-
 }

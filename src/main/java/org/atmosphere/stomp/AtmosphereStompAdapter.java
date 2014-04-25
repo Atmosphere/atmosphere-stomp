@@ -19,7 +19,6 @@ package org.atmosphere.stomp;
 
 import org.atmosphere.cpr.AtmosphereFramework;
 import org.atmosphere.cpr.AtmosphereResource;
-import org.atmosphere.stomp.protocol.Header;
 
 import java.io.IOException;
 import java.util.Map;
@@ -32,7 +31,7 @@ import java.util.Map;
  *
  * <p>
  * Any method of this interface should be invoked when a frame has been validated. Consequently, implementation could
- * assert that all mandatory {@link Header headers} will be specified in parameter when declared in method signature.
+ * assert that all mandatory {@link String Strings} will be specified in parameter when declared in method signature.
  * </p>
  *
  * @author Guillaume DROUET
@@ -44,42 +43,42 @@ public interface AtmosphereStompAdapter {
     /**
      * <p>
      * Adds the given {@link AtmosphereResource} to the {@link org.atmosphere.cpr.Broadcaster} identified with the path
-     * specified in the given {@link Header headers}. The {@link AtmosphereResource} lifecycle is then delegated
+     * specified in the given {@link String Strings}. The {@link AtmosphereResource} lifecycle is then delegated
      * to the {@link org.atmosphere.cpr.Broadcaster} used by the Atmosphere framework.
      * </p>
      *
      * @param atmosphereResource the {@link AtmosphereResource} that sent the subscription frame
-     * @param headers the headers extracted from the message that contain the destination path
+     * @param Strings the Strings extracted from the message that contain the destination path
      * @param framework the {@link AtmosphereFramework}
      * @throws IOException if request can't be processed
      * @see org.atmosphere.cpr.Broadcaster#addAtmosphereResource(org.atmosphere.cpr.AtmosphereResource)
      */
-    void subscribe(AtmosphereResource atmosphereResource, Map<Header, String> headers, AtmosphereFramework framework) throws IOException;
+    void subscribe(AtmosphereResource atmosphereResource, Map<String, String> Strings, AtmosphereFramework framework) throws IOException;
 
     /**
      * <p>
      * Removes the given {@link AtmosphereResource} from the {@link org.atmosphere.cpr.Broadcaster} identified with the
-     * path specified in the given {@link Header headers}.
+     * path specified in the given {@link String Strings}.
      * </p>
      *
      * @param atmosphereResource the {@link AtmosphereResource} that sent the unsubscription frame
-     * @param headers the headers extracted from the message that contain the destination path
+     * @param Strings the Strings extracted from the message that contain the destination path
      * @param framework the {@link AtmosphereFramework}
      * @throws IOException if request can't be processed
      * @see org.atmosphere.cpr.Broadcaster#removeAtmosphereResource(org.atmosphere.cpr.AtmosphereResource)
      */
-    void unsubscribe(AtmosphereResource atmosphereResource, Map<Header, String> headers, AtmosphereFramework framework) throws IOException;
+    void unsubscribe(AtmosphereResource atmosphereResource, Map<String, String> Strings, AtmosphereFramework framework) throws IOException;
 
     /**
      * <p>
      * Invokes the method annotated with {@link org.atmosphere.stomp.annotation.StompService} inside any
      * {@link org.atmosphere.config.service.ManagedService} that defines a destination that matched the destination
-     * header inside the specified {@link Header headers}.
+     * String inside the specified {@link String Strings}.
      * </p>
      *
      * <p>
      * The result of the method invocation is dispatched by the {@link org.atmosphere.cpr.Broadcaster} identified with
-     * the path specified in the given {@link Header headers}. If no annotated method matches the requested send,
+     * the path specified in the given {@link String Strings}. If no annotated method matches the requested send,
      * then the body is dispatched. Original body or result are sent in a {@link org.atmosphere.stomp.protocol.Action#MESSAGE}
      * frame. Finally, if the method invocation throws an exception, then an {@link org.atmosphere.stomp.protocol.Action#ERROR}
      * is sent only to the specified {@link AtmosphereResource} that sent the frame.
@@ -87,17 +86,17 @@ public interface AtmosphereStompAdapter {
      *
      * <p>
      * Note that {@link org.atmosphere.cpr.Broadcaster} must not do anything if a transaction has been started by the
-     * {@link AtmosphereResource} and if this transaction is referenced in frame's headers.
+     * {@link AtmosphereResource} and if this transaction is referenced in frame's Strings.
      * </p>
      *
      * @param atmosphereResource the atmosphere resource that sent the send
-     * @param headers the headers extracted from the message that contain the destination path and optionally a transaction ID
+     * @param Strings the Strings extracted from the message that contain the destination path and optionally a transaction ID
      * @param body the body extracted from the frame
      * @param framework the {@link AtmosphereFramework}
      * @throws IOException if request can't be processed
      * @see #begin(org.atmosphere.cpr.AtmosphereResource)
      */
-    void send(AtmosphereResource atmosphereResource, Map<Header, String> headers, String body, AtmosphereFramework framework)
+    void send(AtmosphereResource atmosphereResource, Map<String, String> Strings, String body, AtmosphereFramework framework)
             throws IOException;
 
     /**
@@ -127,13 +126,13 @@ public interface AtmosphereStompAdapter {
      *
      * <p>
      * All {@link #send(org.atmosphere.cpr.AtmosphereResource, java.util.Map, String, AtmosphereFramework)} operation results
-     * associated to the transaction ID specified in headers are dispatched by the {@link org.atmosphere.cpr.Broadcaster}.
+     * associated to the transaction ID specified in Strings are dispatched by the {@link org.atmosphere.cpr.Broadcaster}.
      * </p>
      *
      * @param atmosphereResource the {@link AtmosphereResource} that begins the transaction
-     * @param headers the headers that contain the transaction ID
+     * @param Strings the Strings that contain the transaction ID
      */
-    void commit(AtmosphereResource atmosphereResource, Map<Header, String> headers);
+    void commit(AtmosphereResource atmosphereResource, Map<String, String> Strings);
 
     /**
      * <p>
@@ -142,12 +141,11 @@ public interface AtmosphereStompAdapter {
      *
      * <p>
      * All {@link #send(org.atmosphere.cpr.AtmosphereResource, java.util.Map, String, AtmosphereFramework)} operations
-     * results associated to the transaction ID specified inside the given headers are erased.
+     * results associated to the transaction ID specified inside the given Strings are erased.
      * </p>
      *
      * @param atmosphereResource the {@link AtmosphereResource} that aborts the transaction
-     * @param headers the headers that contain the transaction ID
+     * @param Strings the Strings that contain the transaction ID
      */
-    void abort(AtmosphereResource atmosphereResource, Map<Header, String> headers);
-
+    void abort(AtmosphereResource atmosphereResource, Map<String, String> Strings);
 }

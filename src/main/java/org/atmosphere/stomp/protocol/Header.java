@@ -14,49 +14,96 @@
  * the License.
  */
 
-
 package org.atmosphere.stomp.protocol;
 
-public enum Header {
+/**
+ * <p>
+ * This interface defines all default headers in STOMP protocol.
+ * </p>
+ *
+ * @author Guillaume DROUET
+ * @since 2.2
+ * @version 1.0
+ */
+public interface Header {
 
-    ACCEPT_VERSION,
+    /**
+     * The versions of the STOMP protocol the client supports.
+     */
+    String ACCEPT_VERSION = "accept-version";
 
-    HOST,
+    /**
+     * The name of a virtual host that the client wishes to connect to.
+     */
+    String HOST = "host";
 
-    LOGIN,
+    /**
+     * The user id used to authenticate against a secured STOMP server.
+     */
+    String LOGIN = "login";
 
-    PASSCODE,
+    /**
+     * The password used to authenticate against a secured STOMP server.
+     */
+    String PASSCODE = "passcode";
 
-    HEART_BEAT,
+    /**
+     * Specify the test of healthiness of the underlying TCP connection
+     */
+    String HEART_BEAT = "heart-beat";
 
-    DESTINATION,
+    /**
+     * Indicates the destination to which the client wants to subscribe.
+     */
+    String DESTINATION = "destination";
 
-    CONTENT_TYPE,
+    /**
+     * Mime type which describes the format of the body.
+     */
+    String CONTENT_TYPE = "content-type";
 
-    CONTENT_LENGTH,
+    /**
+     * byte count for the length of the message body.
+     */
+    String CONTENT_LENGTH = "content-length";
 
-    ID,
+    /**
+     * The subscription ID.
+     */
+    String ID = "id";
 
-    ACK,
+    /**
+     * Specify message acknowledgment.
+     */
+    String ACK = "ack";
 
-    TRANSACTION,
+    /**
+     * The transaction ID.
+     */
+    String TRANSACTION = "transaction";
 
-    RECEIPT,
+    /**
+     * Ask for server acknowledgment.
+     */
+    String RECEIPT = "receipt";
 
-    RECEIPT_ID,
+    /**
+     * Server acknowledgment ID.
+     */
+    String RECEIPT_ID = "receipt-id";
 
-    SUBSCRIPTION,
+    /**
+     * Subscription ID.
+     */
+    String SUBSCRIPTION = "subscription";
 
-    MESSAGE_ID,
+    /**
+     * Delivered message ID.
+     */
+    String MESSAGE_ID = "message-id";
 
-    MESSAGE;
-
-    public static Header parse(final String str) throws IllegalHeaderException {
-        try {
-            return valueOf(str.toUpperCase().replace('-', '_'));
-        } catch (IllegalArgumentException iae) {
-            throw new IllegalHeaderException();
-        }
-    }
-
+    /**
+     * Error message.
+     */
+    String MESSAGE = "message";
 }

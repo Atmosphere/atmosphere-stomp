@@ -91,7 +91,7 @@ public class AtmosphereStompAdapterImpl implements AtmosphereStompAdapter {
      * @throws IOException of procedure fails
      */
     private void callHandler(final AtmosphereResource resource,
-                             final Map<Header, String> headers,
+                             final Map<String, String> headers,
                              final AtmosphereFramework framework,
                              final boolean byId,
                              final Procedure call)
@@ -119,7 +119,7 @@ public class AtmosphereStompAdapterImpl implements AtmosphereStompAdapter {
      * {@inheritDoc}
      */
     @Override
-    public void subscribe(final AtmosphereResource resource, final Map<Header, String> headers, final AtmosphereFramework framework)
+    public void subscribe(final AtmosphereResource resource, final Map<String, String> headers, final AtmosphereFramework framework)
             throws IOException {
         callHandler(resource, headers, framework, false, new Procedure() {
 
@@ -139,7 +139,7 @@ public class AtmosphereStompAdapterImpl implements AtmosphereStompAdapter {
      * {@inheritDoc}
      */
     @Override
-    public void unsubscribe(final AtmosphereResource resource, final Map<Header, String> headers, final AtmosphereFramework framework)
+    public void unsubscribe(final AtmosphereResource resource, final Map<String, String> headers, final AtmosphereFramework framework)
             throws IOException {
         callHandler(resource, headers, framework, true, new Procedure() {
 
@@ -158,7 +158,7 @@ public class AtmosphereStompAdapterImpl implements AtmosphereStompAdapter {
      * {@inheritDoc}
      */
     @Override
-    public void send(final AtmosphereResource atmosphereResource, final Map<Header, String> headers, final String body, final AtmosphereFramework framework)
+    public void send(final AtmosphereResource atmosphereResource, final Map<String, String> headers, final String body, final AtmosphereFramework framework)
             throws IOException {
         callHandler(atmosphereResource, headers, framework, false, new Procedure() {
 
@@ -186,7 +186,7 @@ public class AtmosphereStompAdapterImpl implements AtmosphereStompAdapter {
      * {@inheritDoc}
      */
     @Override
-    public void commit(final AtmosphereResource atmosphereResource, final Map<Header, String> headers) {
+    public void commit(final AtmosphereResource atmosphereResource, final Map<String, String> headers) {
         // TODO
     }
 
@@ -194,7 +194,7 @@ public class AtmosphereStompAdapterImpl implements AtmosphereStompAdapter {
      * {@inheritDoc}
      */
     @Override
-    public void abort(final AtmosphereResource atmosphereResource, final Map<Header, String> headers) {
+    public void abort(final AtmosphereResource atmosphereResource, final Map<String, String> headers) {
         // TODO
     }
 }
