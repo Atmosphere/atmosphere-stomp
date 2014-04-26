@@ -17,5 +17,14 @@
 
 package org.atmosphere.stomp.protocol;
 
+/**
+ * <p>
+ * This class represents an exception thrown when we try to create an action with an unknown {@code String} representation.
+ * </p>
+ *
+ * @author Guillaume DROUET
+ * @since 2.2
+ * @version 1.0
+ */
 public class IllegalActionException extends ParseException {
 }

@@ -17,12 +17,33 @@
 
 package org.atmosphere.stomp.protocol;
 
+/**
+ * <p>
+ * This class represents a base exception for any frame parsing issue.
+ * </p>
+ *
+ * @author Guillaume DROUET
+ * @since 2.2
+ * @version 1.0
+ */
 public class ParseException extends Exception {
 
+    /**
+     * <p>
+     * Builds a new exception with an origin.
+     * </p>
+     *
+     * @param origin the origin
+     */
     public ParseException(final Exception origin) {
         super(origin);
     }
 
+    /**
+     * <p>
+     * Builds a new exception.
+     * </p>
+     */
     public ParseException() {
     }
 }
