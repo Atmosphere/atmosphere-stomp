@@ -29,6 +29,10 @@ import org.testng.annotations.Test;
 
 /**
  * Tests with Apollo.
+ *
+ * @author Guillaume DROUET
+ * @since 0.1
+ * @version 1.0
  */
 public class ApolloTest extends Base {
 

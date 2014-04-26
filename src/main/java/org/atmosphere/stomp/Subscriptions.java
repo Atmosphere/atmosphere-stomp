@@ -31,7 +31,7 @@ import java.util.List;
  * </p>
  *
  * @author Guillaume DROUET
- * @since 2.2
+ * @since 0.1
  * @version 1.0
  */
 public class Subscriptions {
@@ -65,7 +65,8 @@ public class Subscriptions {
      * A subscription associate an unique ID for the {@link org.atmosphere.cpr.AtmosphereResource} with a destination.
      *
      * @author Guillaume DROUET
-     * @since 2.2
+     * @since 0.1
+
      * @version 1.0
      */
     class Subscription {

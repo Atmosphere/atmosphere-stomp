@@ -33,7 +33,7 @@ import java.util.Map;
  * </p>
  *
  * @author Guillaume DROUET
- * @since 2.2
+ * @since 0.1
  * @version 1.0
  */
 public class AtmosphereStompAdapterImpl implements AtmosphereStompAdapter {
@@ -54,7 +54,8 @@ public class AtmosphereStompAdapterImpl implements AtmosphereStompAdapter {
      * </p>
      *
      * @author Guillaume DROUET
-     * @since 2.2
+     * @since 0.1
+
      * @version 1.0
      */
     private static interface Procedure {

@@ -46,6 +46,10 @@ import static org.testng.Assert.assertTrue;
  * <p>
  * Test suite for STOMP protocol support.
  * </p>
+ *
+ * @author Guillaume DROUET
+ * @since 0.1
+ * @version 1.0
  */
 public class StompInterceptorTest {
 

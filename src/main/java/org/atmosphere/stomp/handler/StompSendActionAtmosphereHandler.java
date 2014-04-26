@@ -40,7 +40,7 @@ import java.lang.reflect.Method;
  * </p>
  *
  * @author Guillaume DROUET
- * @since 2.2
+ * @since 0.1
  * @version 1.0
  */
 public class StompSendActionAtmosphereHandler extends AbstractReflectorAtmosphereHandler {
@@ -185,7 +185,8 @@ public class StompSendActionAtmosphereHandler extends AbstractReflectorAtmospher
      * </p>
      *
      * @author Guillaume DROUET
-     * @since 2.2
+     * @since 0.1
+
      * @version 1.0
      */
     private interface ParamProvider {

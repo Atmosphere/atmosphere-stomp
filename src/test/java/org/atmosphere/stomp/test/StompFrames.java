@@ -21,6 +21,10 @@ package org.atmosphere.stomp.test;
  * <p>
  * Basic frames.
  * </p>
+ *
+ * @author Guillaume DROUET
+ * @since 0.1
+ * @version 1.0
  */
 public class StompFrames {
 
