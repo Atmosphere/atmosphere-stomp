@@ -23,7 +23,7 @@ package org.atmosphere.stomp.protocol;
  * </p>
  *
  * @author Guillaume DROUET
- * @since 2.2
+ * @since 0.1
  * @version 1.0
  */
 public interface StompFormat {

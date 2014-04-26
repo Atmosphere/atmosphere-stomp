@@ -31,7 +31,7 @@ import org.testng.annotations.Test;
  * </p>
  *
  * @author Guillaume DROUET
- * @since 2.2
+ * @since 0.1
  * @version 1.0
  */
 public class ParserTest {

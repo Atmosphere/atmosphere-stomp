@@ -28,6 +28,10 @@ import java.io.IOException;
 
 /**
  * Tests with Active MQ.
+ *
+ * @author Guillaume DROUET
+ * @since 0.1
+ * @version 1.0
  */
 public class ActiveMqTest extends Base {
 

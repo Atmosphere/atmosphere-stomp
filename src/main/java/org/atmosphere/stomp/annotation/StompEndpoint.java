@@ -29,6 +29,8 @@ import java.lang.annotation.Target;
  * to enable the protocol.
  *
  * @author Jeanfrancois Arcand
+ * @since 0.1
+ * @version 1.0
  */
 @Target({ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)

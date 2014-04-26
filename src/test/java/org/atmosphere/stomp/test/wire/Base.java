@@ -33,6 +33,10 @@ import java.util.List;
 
 /**
  * Base class for wire libraries test.
+ *
+ * @author Guillaume DROUET
+ * @since 0.1
+ * @version 1.0
  */
 public class Base {
 

@@ -31,7 +31,7 @@ import org.atmosphere.stomp.annotation.StompService;
  * </p>
  *
  * @author Guillaume DROUET
- * @since 2.2
+ * @since 0.1
  * @version 1.0
  */
 @StompEndpoint
@@ -58,7 +58,8 @@ public class StompBusinessService {
      * </p>
      *
      * @author Guillaume DROUET
-     * @since 2.2
+     * @since 0.1
+
      * @version 1.0
      */
     public static final class BusinessDto {
@@ -101,7 +102,8 @@ public class StompBusinessService {
      * </p>
      *
      * @author Guillaume DROUET
-     * @since 2.2
+     * @since 0.1
+
      * @version 1.0
      */
     public static final class BusinessDtoEncoder implements Encoder<BusinessDto, String> {
@@ -121,7 +123,8 @@ public class StompBusinessService {
      * </p>
      *
      * @author Guillaume DROUET
-     * @since 2.2
+     * @since 0.1
+
      * @version 1.0
      */
     public static final class BusinessDtoDecoder implements Decoder<String, BusinessDto> {
