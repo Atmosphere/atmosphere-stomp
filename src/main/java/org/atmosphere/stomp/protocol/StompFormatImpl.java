@@ -67,6 +67,9 @@ public class StompFormatImpl implements StompFormat {
         final StompFrame sf = new StompFrame(new AsciiBuffer("MESSAGE".getBytes()),
                 JavaConversions.asScalaBuffer(headers).toList(), content, false, JavaConversions.asScalaBuffer(new ArrayList<Tuple2<AsciiBuffer, AsciiBuffer>>()).toList());
         new StompCodec().encode(sf, dbaos);
-        return new String(dbaos.getData());
+        final String toString = new String(dbaos.getData());
+
+        // Cut at null byte
+        return toString.substring(0, toString.indexOf(0x00) + 1);
     }
 }

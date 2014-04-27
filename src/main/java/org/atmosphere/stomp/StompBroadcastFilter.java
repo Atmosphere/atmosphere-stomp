@@ -79,22 +79,21 @@ public class StompBroadcastFilter implements PerRequestBroadcastFilter, Broadcas
         headers.put(Header.DESTINATION, broadcasterId);
 
         final List<String> subscriptionsIds = subscriptions.getSubscriptionsForDestination(broadcasterId);
-        final List<Object> messages = new ArrayList<Object>(subscriptionsIds.size());
+        final StringBuilder sb = new StringBuilder();
 
         // Generate a frame for each subscription
         for (final String id : subscriptionsIds) {
             headers.put(Header.MESSAGE_ID, String.valueOf(UUID.randomUUID()));
             headers.put(Header.SUBSCRIPTION, id);
             final Frame frame = new Frame(Action.MESSAGE, headers, String.valueOf(message));
-            messages.add(stompFormat.format(frame));
+            sb.append(stompFormat.format(frame)).append("\n");
         }
 
         // If the resource is added to the broadcaster that triggered the call to the filter, then at least one subscription must exists
-        if (messages.isEmpty()) {
+        if (sb.length() == 0) {
             throw new IllegalStateException();
         } else {
-            // TODO: look for reliable way to broadcast many messages
-            return new BroadcastAction(messages.get(0));
+            return new BroadcastAction(sb.toString());
         }
     }
 
