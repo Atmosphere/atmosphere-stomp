@@ -28,7 +28,6 @@ import org.atmosphere.stomp.protocol.Frame;
 import org.atmosphere.stomp.protocol.Header;
 import org.atmosphere.stomp.protocol.StompFormat;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
