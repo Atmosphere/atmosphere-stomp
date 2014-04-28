@@ -205,8 +205,15 @@ public class StompInterceptor extends AtmosphereInterceptorAdapter {
             // Let the global handler suspend the connection if no action is submitted
             if (body.length() == 0) {
                 return Action.CONTINUE;
-            } else {
-                body.deleteCharAt(body.length() - 1);
+            }
+
+            body.deleteCharAt(body.length() - 1);
+
+            // Suspend first before attempting to add the resource to any broadcaster
+            // We do the job in place of global handler so we will skip it at the end of the interceptor
+            // POST method don't need to be suspended
+            if ("GET".equals(r.getRequest().getMethod())) {
+                r.suspend();
             }
 
             final Frame message = stompFormat.parse(body.toString());

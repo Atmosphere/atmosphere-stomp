@@ -20,8 +20,10 @@ package org.atmosphere.stomp;
 import org.atmosphere.cpr.AtmosphereResourceSession;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 /**
  * <p>
@@ -129,6 +131,23 @@ public class Subscriptions {
      */
     public Subscriptions() {
         subscriptionList = new ArrayList<Subscription>();
+    }
+
+    /**
+     * <p>
+     * Gets all the destinations this client has subscribed to.
+     * </p>
+     *
+     * @return the destinations set
+     */
+    public Set<String> getAllDestinations() {
+        final Set<String> destinations = new HashSet<String>();
+
+        for (final Subscription s : subscriptionList) {
+            destinations.add(s.getDestination());
+        }
+
+        return destinations;
     }
 
     /**
