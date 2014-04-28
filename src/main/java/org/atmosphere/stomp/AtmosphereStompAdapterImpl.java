@@ -171,6 +171,7 @@ public class AtmosphereStompAdapterImpl implements AtmosphereStompAdapter {
              */
             @Override
             public void apply(final Subscriptions subscriptions, final String destination, final AtmosphereFramework.AtmosphereHandlerWrapper handler) throws IOException {
+                // TODO: atmosphereResource.getRequest() may throw an IllegalStateException
                 atmosphereResource.getRequest().setAttribute(StompInterceptor.STOMP_MESSAGE_BODY,
                         body != null && body.endsWith("\n") ? body.substring(0, body.length() - 1) : body);
                 handler.atmosphereHandler.onRequest(atmosphereResource);
