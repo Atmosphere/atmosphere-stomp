@@ -184,9 +184,16 @@ public class StompInterceptor extends AtmosphereInterceptorAdapter {
         framework = config.framework();
         stompFormat = PropertyClass.STOMP_FORMAT_CLASS.retrieve(StompFormat.class, config);
         adapter = PropertyClass.ADAPTER_CLASS.retrieve(AtmosphereStompAdapter.class, config);
-        final BroadcastFilterLifecycle broadcaster = new StompBroadcastFilter();
-        broadcaster.init(config);
-        framework.broadcasterFilters(broadcaster);
+        final BroadcastFilterLifecycle filter;
+        try {
+            filter = framework.newClassInstance(BroadcastFilterLifecycle.class, StompBroadcastFilter.class);
+            framework.broadcasterFilters(filter);
+            filter.init(config);
+        } catch (InstantiationException e) {
+            logger.error("", e);
+        } catch (IllegalAccessException e) {
+            logger.error("", e);
+        }
 
         // TODO: user must map AtmosphereServlet to /stomp in web.xml, can we offer a chance to set a custom location ?
         framework.addAtmosphereHandler("/stomp", new StompGlobalAtmosphereHandler());
