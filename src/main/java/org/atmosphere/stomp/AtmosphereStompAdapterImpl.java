@@ -110,7 +110,7 @@ public class AtmosphereStompAdapterImpl implements AtmosphereStompAdapter {
         // The EndpointMapper is a little bit slower than retrieving the AtmosphereHandler directly from the Map, but
         // EndpointMapper support URI mapping, which is always stronger than direct mapping.
         final AtmosphereFramework.AtmosphereHandlerWrapper handler =
-                framework.endPointMapper().map(resource.getRequest(), framework.getAtmosphereHandlers());
+                framework.endPointMapper().map(mapping, framework.getAtmosphereHandlers());
 
         if (handler != null) {
             call.apply(retval, mapping, handler);
