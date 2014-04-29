@@ -25,8 +25,8 @@ import org.atmosphere.cpr.AtmosphereResource;
 import org.atmosphere.cpr.AtmosphereResourceSessionFactory;
 import org.atmosphere.cpr.BroadcastFilterLifecycle;
 import org.atmosphere.cpr.BroadcasterFactory;
+import org.atmosphere.handler.AbstractReflectorAtmosphereHandler;
 import org.atmosphere.interceptor.AtmosphereResourceLifecycleInterceptor;
-import org.atmosphere.stomp.handler.StompGlobalAtmosphereHandler;
 import org.atmosphere.stomp.protocol.Frame;
 import org.atmosphere.stomp.protocol.ParseException;
 import org.atmosphere.stomp.protocol.StompFormat;
@@ -208,7 +208,7 @@ public class StompInterceptor extends AtmosphereResourceLifecycleInterceptor {
         arsf = AtmosphereResourceSessionFactory.getDefault();
 
         // TODO: user must map AtmosphereServlet to /stomp in web.xml, can we offer a chance to set a custom location ?
-        framework.addAtmosphereHandler("/stomp", new StompGlobalAtmosphereHandler());
+        framework.addAtmosphereHandler("/stomp", new AbstractReflectorAtmosphereHandler.Default());
 
         try {
             final BroadcastFilterLifecycle filter = framework.newClassInstance(BroadcastFilterLifecycle.class, StompBroadcastFilter.class);
