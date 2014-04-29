@@ -134,7 +134,10 @@ public class AtmosphereStompAdapterImpl implements AtmosphereStompAdapter {
             public void apply(final Subscriptions subscriptions, final String destination, final AtmosphereFramework.AtmosphereHandlerWrapper handler)
                     throws IOException {
                 subscriptions.addSubscription(headers.get(Header.ID), destination);
-                handler.broadcaster.addAtmosphereResource(framework.getAtmosphereConfig().resourcesFactory().find(resource.uuid()));
+
+                // TODO: check null for test purpose.
+                final AtmosphereResource ar = framework.getAtmosphereConfig().resourcesFactory().find(resource.uuid());
+                handler.broadcaster.addAtmosphereResource(ar == null ? resource : ar);
             }
         });
     }

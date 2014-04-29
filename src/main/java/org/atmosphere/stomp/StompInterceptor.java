@@ -22,7 +22,10 @@ import org.atmosphere.cpr.AtmosphereConfig;
 import org.atmosphere.cpr.AtmosphereFramework;
 import org.atmosphere.cpr.AtmosphereInterceptorAdapter;
 import org.atmosphere.cpr.AtmosphereResource;
+import org.atmosphere.cpr.AtmosphereResourceSessionFactory;
 import org.atmosphere.cpr.BroadcastFilterLifecycle;
+import org.atmosphere.cpr.BroadcasterFactory;
+import org.atmosphere.interceptor.AtmosphereResourceLifecycleInterceptor;
 import org.atmosphere.stomp.handler.StompGlobalAtmosphereHandler;
 import org.atmosphere.stomp.protocol.Frame;
 import org.atmosphere.stomp.protocol.ParseException;
@@ -33,12 +36,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.Set;
 
 /**
  * <p>
  * This interceptor reads the messages and parse it thanks to the {@link org.atmosphere.stomp.protocol.Parser}. When
  * the message is parsed, the interceptor invokes a method provided by an {@link AtmosphereInterceptorAdapter} according
  * to the {@link org.atmosphere.stomp.protocol.Action} specified inside the message.
+ * </p>
+ *
+ * <p>
+ * This interceptor inherits from the {@link AtmosphereResourceLifecycleInterceptor} to suspends the connection. Then it
+ * could add any {@link AtmosphereResource} to a {@link org.atmosphere.cpr.Broadcaster} if necessary.
  * </p>
  *
  * <p>
@@ -56,7 +65,7 @@ import java.io.IOException;
  * @since 0.1
  * @version 1.0
  */
-public class StompInterceptor extends AtmosphereInterceptorAdapter {
+public class StompInterceptor extends AtmosphereResourceLifecycleInterceptor {
 
     /**
      * <p>
@@ -177,26 +186,38 @@ public class StompInterceptor extends AtmosphereInterceptorAdapter {
     private AtmosphereStompAdapter adapter;
 
     /**
+     * The {@link AtmosphereConfig} used by this interceptor.
+     */
+    private AtmosphereConfig atmosphereConfig;
+
+    /**
+     * The {@link AtmosphereResourceSessionFactory}.
+     */
+    private AtmosphereResourceSessionFactory arsf;
+
+    /**
      * {@inheritDoc}
      */
     @Override
     public void configure(final AtmosphereConfig config) {
+        atmosphereConfig = config;
         framework = config.framework();
         stompFormat = PropertyClass.STOMP_FORMAT_CLASS.retrieve(StompFormat.class, config);
         adapter = PropertyClass.ADAPTER_CLASS.retrieve(AtmosphereStompAdapter.class, config);
-        final BroadcastFilterLifecycle filter;
+        arsf = AtmosphereResourceSessionFactory.getDefault();
+
+        // TODO: user must map AtmosphereServlet to /stomp in web.xml, can we offer a chance to set a custom location ?
+        framework.addAtmosphereHandler("/stomp", new StompGlobalAtmosphereHandler());
+
         try {
-            filter = framework.newClassInstance(BroadcastFilterLifecycle.class, StompBroadcastFilter.class);
+            final BroadcastFilterLifecycle filter = framework.newClassInstance(BroadcastFilterLifecycle.class, StompBroadcastFilter.class);
             framework.broadcasterFilters(filter);
-            filter.init(config);
+            filter.init(atmosphereConfig);
         } catch (InstantiationException e) {
             logger.error("", e);
         } catch (IllegalAccessException e) {
             logger.error("", e);
         }
-
-        // TODO: user must map AtmosphereServlet to /stomp in web.xml, can we offer a chance to set a custom location ?
-        framework.addAtmosphereHandler("/stomp", new StompGlobalAtmosphereHandler());
     }
 
     /**
@@ -215,13 +236,6 @@ public class StompInterceptor extends AtmosphereInterceptorAdapter {
             }
 
             body.deleteCharAt(body.length() - 1);
-
-            // Suspend first before attempting to add the resource to any broadcaster
-            // We do the job in place of global handler so we will skip it at the end of the interceptor
-            // POST method don't need to be suspended
-            if ("GET".equals(r.getRequest().getMethod())) {
-                r.suspend();
-            }
 
             final Frame message = stompFormat.parse(body.toString());
 
@@ -243,5 +257,27 @@ public class StompInterceptor extends AtmosphereInterceptorAdapter {
         }
 
         return Action.SKIP_ATMOSPHEREHANDLER;
+    }
+
+    @Override
+    public void postInspect(final AtmosphereResource atmosphereResource) {
+        // Will see if the connection was already suspended (websocket). In that case no need to update broadcaster
+        // If AtmosphereResourceLifecycleInterceptor suspends it while it was not suspended, it means that it could
+        // be a new connection of a resource that was removed from the broadcaster so we need to update it
+        final boolean wasAlreadySuspended = atmosphereResource.isSuspended();
+
+        // Suspends if necessary
+        super.postInspect(atmosphereResource);
+
+        // The client can reconnects while he has already subscribed different destinations
+        // We need to add the new request to the associated broadcasters
+        if (!wasAlreadySuspended && atmosphereResource.isSuspended()) {
+            final Subscriptions s = Subscriptions.getFromSession(arsf.getSession(atmosphereResource));
+            final Set<String> destinations = s.getAllDestinations();
+
+            for (final String d : destinations) {
+                BroadcasterFactory.getDefault().lookup(d).addAtmosphereResource(atmosphereResource);
+            }
+        }
     }
 }
