@@ -200,6 +200,7 @@ public class StompInterceptor extends AtmosphereResourceLifecycleInterceptor {
      */
     @Override
     public void configure(final AtmosphereConfig config) {
+        super.configure(config);
         atmosphereConfig = config;
         framework = config.framework();
         stompFormat = PropertyClass.STOMP_FORMAT_CLASS.retrieve(StompFormat.class, config);
