@@ -1,14 +1,6 @@
 ### [STOMP](http://en.wikipedia.org/wiki/Streaming_Text_Oriented_Messaging_Protocol) implementation for the [Atmosphere Framework](https://github.com/Atmosphere/atmosphere)
 
-### Demo
-
-Early adopter, check out our [demo](https://github.com/Atmosphere/atmosphere-samples/tree/master/stomp) to get started. File issues, do pull requests to help this community. Have questions? Post them [here](https://groups.google.com/group/atmosphere-framework?pli=1)
-
-### Quick start
-
-Using STOMP protocol over Atmosphere is very easy.
-
-#### To enable Atmosphere STOMP, add the following dependency:
+#### To download Atmosphere STOMP, add the following dependency:
 ```xml
      <dependency>
          <groupId>org.atmosphere</groupId>
@@ -16,6 +8,14 @@ Using STOMP protocol over Atmosphere is very easy.
          <version>0.1</version>
       </dependency>
 ```
+
+### Demo
+
+Check out our super simple [demo](https://github.com/Atmosphere/atmosphere-samples/tree/master/stomp) to get started. File issues, do pull requests to help this community. Have questions? Post them [here](https://groups.google.com/group/atmosphere-framework?pli=1)
+
+### Quick start
+
+Using STOMP protocol over Atmosphere is very easy.
 
 #### Server side code
 
