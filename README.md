@@ -13,7 +13,7 @@ Using STOMP protocol over Atmosphere is very easy.
      <dependency>
          <groupId>org.atmosphere</groupId>
          <artifactId>atmosphere-stomp</artifactId>
-         <version>0.1.0-SNAPSHOT</version>
+         <version>0.1</version>
       </dependency>
 ```
 
