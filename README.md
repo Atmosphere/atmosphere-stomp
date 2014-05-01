@@ -9,6 +9,28 @@
       </dependency>
 ```
 
+### Project state
+
+The protocol support is currently not complete and will be progressively fixed in future releases.
+To do this, the project will lead new [CPR](https://github.com/Atmosphere/atmosphere/tree/master/modules/cpr) and
+[Javascript](https://github.com/Atmosphere/atmosphere-javascript) enhancements to then take advantage from them.
+
+Consequently, alpha/RC of both projects will be provided when necessary the day we need to release a new version of
+STOMP support. The following table shows the associated versions:
+
+<table>
+    <tr>
+        <td>atmosphere-stomp</td>
+        <td>atmosphere-runtime</td>
+        <td>atmosphere-stomp</td>
+    </tr>
+    <tr>
+        <td>0.1</td>
+        <td>2.2.0-RC1</td>
+        <td>2.2.0</td>
+    </tr>
+</table>
+
 ### Demo
 
 Check out our super simple [demo](https://github.com/Atmosphere/atmosphere-samples/tree/master/stomp) to get started. File issues, do pull requests to help this community. Have questions? Post them [here](https://groups.google.com/group/atmosphere-framework?pli=1)
