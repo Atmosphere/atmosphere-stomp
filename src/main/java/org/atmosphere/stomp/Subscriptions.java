@@ -24,12 +24,18 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * <p>
- * An {@link org.atmosphere.cpr.AtmosphereResource} can subscribes to many destination. The STOMP protocol allow to
+ * An {@link org.atmosphere.cpr.AtmosphereResource} can subscribes to many destination. The STOMP protocol allows to
  * subscribe many times to the same destination. This class can provide subscriptions to a destination or the destination
  * for a subscription ID.
+ * </p>
+ *
+ * <p>
+ * The class is thread safe as it is used in a concurrent context.
  * </p>
  *
  * @author Guillaume DROUET
@@ -42,6 +48,11 @@ public class Subscriptions {
      * The key used to store subscriptions in {@link org.atmosphere.cpr.AtmosphereResourceSession}.
      */
     private static final String ATTRIBUTE_KEY = Subscriptions.class.getName() + ".key";
+
+    /**
+     * Lock used when performing operations on subscriptions.
+     */
+    private final Lock lock = new ReentrantLock();
 
     /**
      * <p>
@@ -68,7 +79,6 @@ public class Subscriptions {
      *
      * @author Guillaume DROUET
      * @since 0.1
-
      * @version 1.0
      */
     class Subscription {
@@ -141,13 +151,18 @@ public class Subscriptions {
      * @return the destinations set
      */
     public Set<String> getAllDestinations() {
-        final Set<String> destinations = new HashSet<String>();
+        try {
+            lock.lock();
+            final Set<String> destinations = new HashSet<String>();
 
-        for (final Subscription s : subscriptionList) {
-            destinations.add(s.getDestination());
+            for (final Subscription s : subscriptionList) {
+                destinations.add(s.getDestination());
+            }
+
+            return destinations;
+        } finally {
+            lock.unlock();
         }
-
-        return destinations;
     }
 
     /**
@@ -159,7 +174,12 @@ public class Subscriptions {
      * @param destination the subscribed destination
      */
     public void addSubscription(final String id, final String destination) {
-        subscriptionList.add(new Subscription(id, destination));
+        try {
+            lock.lock();
+            subscriptionList.add(new Subscription(id, destination));
+        } finally {
+            lock.unlock();
+        }
     }
 
     /**
@@ -171,15 +191,20 @@ public class Subscriptions {
      * @return all the IDs mapped to the destination
      */
     public List<String> getSubscriptionsForDestination(final String destination) {
-        final List<String> retval = new ArrayList<String>();
+        try {
+            lock.lock();
+            final List<String> retval = new ArrayList<String>();
 
-        for (final Subscription s : subscriptionList) {
-            if (s.getDestination().equals(destination)) {
-                retval.add(s.getId());
+            for (final Subscription s : subscriptionList) {
+                if (s.getDestination().equals(destination)) {
+                    retval.add(s.getId());
+                }
             }
-        }
 
-        return retval;
+            return retval;
+        } finally {
+            lock.unlock();
+        }
     }
 
     /**
@@ -191,13 +216,18 @@ public class Subscriptions {
      * @return the destination the ID subscribes to
      */
     public String getDestinationForId(final String id) {
-        for (final Subscription s : subscriptionList) {
-            if (s.getId().equals(id)) {
-                return s.getDestination();
+        try {
+            lock.lock();
+            for (final Subscription s : subscriptionList) {
+                if (s.getId().equals(id)) {
+                    return s.getDestination();
+                }
             }
-        }
 
-        throw new IllegalArgumentException();
+            throw new IllegalArgumentException();
+        } finally {
+            lock.unlock();
+        }
     }
 
     /**
@@ -208,13 +238,18 @@ public class Subscriptions {
      * @param id the Id
      */
     public void removeSubscription(final String id) {
-        for (final Iterator<Subscription> it = subscriptionList.iterator(); it.hasNext();) {
-            final Subscription s = it.next();
+        try {
+            lock.lock();
+            for (final Iterator<Subscription> it = subscriptionList.iterator(); it.hasNext(); ) {
+                final Subscription s = it.next();
 
-            if (s.getId().equals(id)) {
-                subscriptionList.remove(s);
-                return;
+                if (s.getId().equals(id)) {
+                    subscriptionList.remove(s);
+                    return;
+                }
             }
+        } finally {
+            lock.unlock();
         }
     }
 }
