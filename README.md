@@ -22,7 +22,7 @@ STOMP support. The following table shows the associated versions:
     <tr>
         <td>atmosphere-stomp</td>
         <td>atmosphere-runtime</td>
-        <td>atmosphere-stomp</td>
+        <td>atmosphere-javascript</td>
     </tr>
     <tr>
         <td>0.1</td>
