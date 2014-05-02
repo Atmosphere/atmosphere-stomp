@@ -25,12 +25,17 @@ import org.atmosphere.cpr.Broadcaster;
 import org.atmosphere.handler.AbstractReflectorAtmosphereHandler;
 import org.atmosphere.stomp.StompInterceptor;
 import org.atmosphere.stomp.annotation.StompEndpoint;
+import org.atmosphere.stomp.protocol.Action;
+import org.atmosphere.stomp.protocol.Frame;
+import org.atmosphere.stomp.protocol.Header;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * <p>
@@ -167,7 +172,6 @@ public class StompSendActionAtmosphereHandler extends AbstractReflectorAtmospher
             final Object retval = method.invoke(toProxy, params);
 
             if (retval != null) {
-                // TODO: wrap to frame message
                 broadcaster.broadcast(encoder == null ? retval : encoder.encode(retval));
             } else {
                 // TODO: ack?
@@ -175,7 +179,18 @@ public class StompSendActionAtmosphereHandler extends AbstractReflectorAtmospher
         } catch (IllegalAccessException iae) {
             logger.warn("Failed to process class annotated {}", StompEndpoint.class.getName(), iae);
         } catch (InvocationTargetException ite) {
-            // TODO send error frame
+            logger.info("Invoked method thrown an exception", ite);
+
+            // Push the error in appropriate frame
+            final StringBuilder sb = new StringBuilder();
+            sb.append(Action.ERROR.toString())
+                    .append("\n")
+                    .append(Header.MESSAGE)
+                    .append(":")
+                    .append(ite.getCause().getMessage())
+                    .append("\n\n\n")
+                    .append(0x00);
+            atmosphereResource.write(sb.toString());
         }
     }
 

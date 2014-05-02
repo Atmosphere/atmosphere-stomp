@@ -368,4 +368,22 @@ public class StompInterceptorTest {
         ar = newAtmosphereResource(destination, newRequest(destination), response, true);
         runMessage("null", destination, ar.getRequest(), response, false);
     }
+
+    /**
+     * <p>
+     * Tests when an error occurs.
+     * </p>
+     *
+     * @throws Exception if test fails
+     */
+    @Test
+    public void errorTest() throws Exception {
+        final AtmosphereResponse response = newResponse();
+        final String destination = StompBusinessService.DESTINATION_ERROR;
+
+        // Exception an error
+        action = Action.SEND;
+        final AtmosphereResource ar = newAtmosphereResource(destination, newRequest(destination), response, false);
+        runMessage("(.*)?ERROR.*", destination, ar.getRequest(), response, false);
+    }
 }

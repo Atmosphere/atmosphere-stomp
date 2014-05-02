@@ -53,6 +53,11 @@ public class StompBusinessService {
     public static final String DESTINATION_HELLO_WORLD3 = "/Hello World3!";
 
     /**
+     * Destination that result in error when message are sent to it.
+     */
+    public static final String DESTINATION_ERROR = "/error";
+
+    /**
      * <p>
      * A basic DTO for test purpose using the {@link Message} annotation.
      * </p>
@@ -192,5 +197,17 @@ public class StompBusinessService {
     @Message(encoders = { BusinessDtoEncoder.class }, decoders = {BusinessDtoDecoder.class })
     public BusinessDto sayHello3(final BusinessDto dto) {
         return dto;
+    }
+
+    /**
+     * <p>
+     * This service will throw an exception.
+     * </p>
+     *
+     * @return 1 / 0
+     */
+    @StompService(destination = DESTINATION_ERROR)
+    public int divideByZero() {
+        return 1 / 0;
     }
 }
