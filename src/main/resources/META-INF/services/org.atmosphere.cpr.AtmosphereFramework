@@ -1,0 +1,2 @@
+org.atmosphere.stomp.StompInterceptor
+org.atmosphere.interceptor.AtmosphereResourceLifecycleInterceptor

@@ -26,7 +26,6 @@ import org.atmosphere.cpr.AtmosphereResourceSessionFactory;
 import org.atmosphere.cpr.BroadcastFilterLifecycle;
 import org.atmosphere.cpr.BroadcasterFactory;
 import org.atmosphere.handler.AbstractReflectorAtmosphereHandler;
-import org.atmosphere.interceptor.AtmosphereResourceLifecycleInterceptor;
 import org.atmosphere.stomp.protocol.Frame;
 import org.atmosphere.stomp.protocol.ParseException;
 import org.atmosphere.stomp.protocol.StompFormat;
@@ -46,8 +45,8 @@ import java.util.Set;
  * </p>
  *
  * <p>
- * This interceptor inherits from the {@link AtmosphereResourceLifecycleInterceptor} to suspends the connection. Then it
- * could add any {@link AtmosphereResource} to a {@link org.atmosphere.cpr.Broadcaster} if necessary.
+ * This interceptor should be executed before from the {@link org.atmosphere.interceptor.AtmosphereResourceLifecycleInterceptor}
+ * to suspends the connection. Then it could add any {@link AtmosphereResource} to a {@link org.atmosphere.cpr.Broadcaster} if necessary.
  * </p>
  *
  * <p>
@@ -65,7 +64,7 @@ import java.util.Set;
  * @since 0.1
  * @version 1.0
  */
-public class StompInterceptor extends AtmosphereResourceLifecycleInterceptor {
+public class StompInterceptor extends AtmosphereInterceptorAdapter {
 
     /**
      * <p>
@@ -200,7 +199,6 @@ public class StompInterceptor extends AtmosphereResourceLifecycleInterceptor {
      */
     @Override
     public void configure(final AtmosphereConfig config) {
-        super.configure(config);
         atmosphereConfig = config;
         framework = config.framework();
         stompFormat = PropertyClass.STOMP_FORMAT_CLASS.retrieve(StompFormat.class, config);
@@ -262,17 +260,9 @@ public class StompInterceptor extends AtmosphereResourceLifecycleInterceptor {
 
     @Override
     public void postInspect(final AtmosphereResource atmosphereResource) {
-        // Will see if the connection was already suspended (websocket). In that case no need to update broadcaster
-        // If AtmosphereResourceLifecycleInterceptor suspends it while it was not suspended, it means that it could
-        // be a new connection of a resource that was removed from the broadcaster so we need to update it
-        final boolean wasAlreadySuspended = atmosphereResource.isSuspended();
-
-        // Suspends if necessary
-        super.postInspect(atmosphereResource);
-
         // The client can reconnects while he has already subscribed different destinations
         // We need to add the new request to the associated broadcasters
-        if (!wasAlreadySuspended && atmosphereResource.isSuspended()) {
+        if (atmosphereResource.isSuspended()) {
             final Subscriptions s = Subscriptions.getFromSession(arsf.getSession(atmosphereResource));
             final Set<String> destinations = s.getAllDestinations();
 
