@@ -60,10 +60,11 @@ public class StompFormatImpl implements StompFormat {
         final List<Tuple2<AsciiBuffer, AsciiBuffer>> headers = new ArrayList<Tuple2<AsciiBuffer, AsciiBuffer>>();
 
         for (final Map.Entry<String, String> header : msg.getHeaders().entrySet()) {
-            headers.add(new Tuple2<AsciiBuffer, AsciiBuffer>(new AsciiBuffer(header.getKey().toString().getBytes()), new AsciiBuffer(header.getValue().getBytes())));
+            headers.add(new Tuple2<AsciiBuffer, AsciiBuffer>(new AsciiBuffer(header.getKey().getBytes()), new AsciiBuffer(header.getValue().getBytes())));
         }
 
-        final StompContent content = new BufferContent(new AsciiBuffer(msg.getBody().getBytes(), 0, msg.getBody().length()));
+        final byte[] body = msg.getBody() == null ? new byte[0] : msg.getBody().getBytes();
+        final StompContent content = new BufferContent(new AsciiBuffer(body, 0, body.length));
         final StompFrame sf = new StompFrame(new AsciiBuffer("MESSAGE".getBytes()),
                 JavaConversions.asScalaBuffer(headers).toList(), content, false, JavaConversions.asScalaBuffer(new ArrayList<Tuple2<AsciiBuffer, AsciiBuffer>>()).toList());
         new StompCodec().encode(sf, dbaos);
