@@ -73,7 +73,7 @@ public final class Frame {
      * Gets the action.
      * </p>
      *
-     * @return
+     * @return the action
      */
     public Action getAction() {
         return action;
