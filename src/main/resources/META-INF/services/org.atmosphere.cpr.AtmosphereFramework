@@ -1,2 +1,3 @@
-org.atmosphere.stomp.StompInterceptor
+INSTALL
+org.atmosphere.stomp.interceptor.FrameInterceptor
 org.atmosphere.interceptor.AtmosphereResourceLifecycleInterceptor

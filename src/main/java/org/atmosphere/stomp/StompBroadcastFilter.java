@@ -23,6 +23,7 @@ import org.atmosphere.cpr.BroadcastFilterLifecycle;
 import org.atmosphere.cpr.PerRequestBroadcastFilter;
 import org.atmosphere.cpr.AtmosphereConfig;
 
+import org.atmosphere.stomp.interceptor.FrameInterceptor;
 import org.atmosphere.stomp.protocol.Action;
 import org.atmosphere.stomp.protocol.Frame;
 import org.atmosphere.stomp.protocol.Header;
@@ -109,7 +110,7 @@ public class StompBroadcastFilter implements PerRequestBroadcastFilter, Broadcas
      */
     @Override
     public void init(final AtmosphereConfig config) {
-        stompFormat = StompInterceptor.PropertyClass.STOMP_FORMAT_CLASS.retrieve(StompFormat.class, config);
+        stompFormat = FrameInterceptor.PropertyClass.STOMP_FORMAT_CLASS.retrieve(StompFormat.class, config);
     }
 
     /**

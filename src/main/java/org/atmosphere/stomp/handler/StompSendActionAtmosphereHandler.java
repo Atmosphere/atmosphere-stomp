@@ -23,10 +23,9 @@ import org.atmosphere.config.service.Message;
 import org.atmosphere.cpr.AtmosphereResource;
 import org.atmosphere.cpr.Broadcaster;
 import org.atmosphere.handler.AbstractReflectorAtmosphereHandler;
-import org.atmosphere.stomp.StompInterceptor;
+import org.atmosphere.stomp.interceptor.FrameInterceptor;
 import org.atmosphere.stomp.annotation.StompEndpoint;
 import org.atmosphere.stomp.protocol.Action;
-import org.atmosphere.stomp.protocol.Frame;
 import org.atmosphere.stomp.protocol.Header;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,8 +33,6 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * <p>
@@ -137,7 +134,7 @@ public class StompSendActionAtmosphereHandler extends AbstractReflectorAtmospher
                 paramProviders[i] = new ParamProvider() {
                     @Override
                     public Object getParam(final AtmosphereResource atmosphereResource) {
-                        return atmosphereResource.getRequest().getAttribute(StompInterceptor.STOMP_MESSAGE_BODY);
+                        return atmosphereResource.getRequest().getAttribute(FrameInterceptor.STOMP_MESSAGE_BODY);
                     }
                 };
             // Otherwise we use the decoder to compute the appropriate parameter type
@@ -145,7 +142,7 @@ public class StompSendActionAtmosphereHandler extends AbstractReflectorAtmospher
                 paramProviders[i] = new ParamProvider() {
                     @Override
                     public Object getParam(final AtmosphereResource atmosphereResource) {
-                        return decoder.decode(atmosphereResource.getRequest().getAttribute(StompInterceptor.STOMP_MESSAGE_BODY).toString());
+                        return decoder.decode(atmosphereResource.getRequest().getAttribute(FrameInterceptor.STOMP_MESSAGE_BODY).toString());
                     }
                 };
             // No decoder provided, we don't know how to convert raw string into expected parameter type

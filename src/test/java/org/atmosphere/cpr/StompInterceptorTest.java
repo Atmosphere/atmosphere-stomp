@@ -17,7 +17,7 @@
 
 package org.atmosphere.cpr;
 
-import org.atmosphere.stomp.StompInterceptor;
+import org.atmosphere.stomp.interceptor.FrameInterceptor;
 import org.atmosphere.cpr.packages.StompEndpointProcessor;
 import org.atmosphere.stomp.Subscriptions;
 import org.atmosphere.stomp.protocol.Action;
@@ -114,7 +114,7 @@ public class StompInterceptorTest {
         framework.setAsyncSupport(processor);
 
         // Configure interceptor
-        framework.interceptor(new StompInterceptor());
+        framework.interceptor(new FrameInterceptor());
     }
 
     /**

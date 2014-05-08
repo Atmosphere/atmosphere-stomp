@@ -46,7 +46,7 @@ import java.lang.reflect.Method;
  *
  * <p>
  * By adding those new {@link org.atmosphere.cpr.AtmosphereHandler handlers} to the {@link AtmosphereFramework},
- * the {@link org.atmosphere.stomp.StompInterceptor} will be able to find the appropriate method to invoke when
+ * the {@link org.atmosphere.stomp.interceptor.FrameInterceptor} will be able to find the appropriate method to invoke when
  * reading the {@link org.atmosphere.stomp.protocol.Header#DESTINATION destination} in frames.
  * </p>
  *
@@ -90,7 +90,6 @@ public class StompEndpointProcessor implements Processor<Object> {
 
                 if (destination == null || destination.isEmpty()) {
                     logger.warn("The destination in {} must not be empty", StompService.class.getName(), new IllegalStateException());
-                    continue;
                 } else {
                     // Optional message annotation with encoders and decoders
                     final Decoder<String, Object> decoder;
