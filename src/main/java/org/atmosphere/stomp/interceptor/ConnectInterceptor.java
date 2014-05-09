@@ -25,6 +25,7 @@ import org.atmosphere.interceptor.HeartbeatInterceptor;
 import org.atmosphere.stomp.StompInterceptor;
 import org.atmosphere.stomp.protocol.Frame;
 import org.atmosphere.stomp.protocol.Header;
+import org.atmosphere.stomp.protocol.StompFormat;
 
 import java.util.concurrent.TimeUnit;
 
@@ -80,7 +81,7 @@ public class ConnectInterceptor extends HeartbeatInterceptor implements StompInt
      * {@inheritDoc}
      */
     @Override
-    public Action inspect(final AtmosphereFramework framework, final Frame frame, final AtmosphereResource r) {
+    public Action inspect(final StompFormat stompFormat, final AtmosphereFramework framework, final Frame frame, final AtmosphereResource r) {
         try {
             final Integer[] intervals = parseHeartBeat(frame.getHeaders().get(Header.HEART_BEAT));
             desiredHeartbeat.set(intervals[1]);

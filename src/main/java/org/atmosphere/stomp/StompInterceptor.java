@@ -22,6 +22,7 @@ import org.atmosphere.cpr.AtmosphereFramework;
 import org.atmosphere.cpr.AtmosphereInterceptor;
 import org.atmosphere.cpr.AtmosphereResource;
 import org.atmosphere.stomp.protocol.Frame;
+import org.atmosphere.stomp.protocol.StompFormat;
 
 import java.io.IOException;
 
@@ -52,9 +53,11 @@ public interface StompInterceptor extends AtmosphereInterceptor {
      * Inspects the {@link AtmosphereResource} with its extracted {@link Frame}.
      * </p>
      *
+     * @param stompFormat the objects that generates frames when needed
      * @param framework the framework
      * @param frame the frame
      * @param r the resource
+     * @throws IOException if inspection fails
      */
-    Action inspect(AtmosphereFramework framework, Frame frame, AtmosphereResource r) throws IOException;
+    Action inspect(StompFormat stompFormat, AtmosphereFramework framework, Frame frame, AtmosphereResource r) throws IOException;
 }

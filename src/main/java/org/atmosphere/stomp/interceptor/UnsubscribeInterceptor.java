@@ -26,6 +26,7 @@ import org.atmosphere.stomp.StompInterceptor;
 import org.atmosphere.stomp.Subscriptions;
 import org.atmosphere.stomp.protocol.Frame;
 import org.atmosphere.stomp.protocol.Header;
+import org.atmosphere.stomp.protocol.StompFormat;
 
 import java.io.IOException;
 
@@ -45,8 +46,8 @@ public class UnsubscribeInterceptor extends AtmosphereInterceptorAdapter impleme
      * {@inheritDoc}
      */
     @Override
-    public Action inspect(final AtmosphereFramework framework, final Frame frame, final AtmosphereResource resource)
-        throws IOException {
+    public Action inspect(final StompFormat stompFormat, final AtmosphereFramework framework, final Frame frame, final AtmosphereResource resource)
+            throws IOException {
         final Action retval = inspect(resource);
         HandlerHelper.INSTANCE.callHandler(resource, frame.getHeaders(), framework, true, new HandlerHelper.Procedure() {
 

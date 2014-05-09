@@ -217,7 +217,7 @@ public class FrameInterceptor extends AtmosphereInterceptorAdapter implements St
 
             body.deleteCharAt(body.length() - 1);
 
-            return inspect(framework, stompFormat.parse(body.toString()), r);
+            return inspect(stompFormat, framework, stompFormat.parse(body.toString()), r);
         } catch (final IOException ioe) {
             logger.error("STOMP interceptor fails", ioe);
         } catch (final ParseException pe) {
@@ -242,7 +242,7 @@ public class FrameInterceptor extends AtmosphereInterceptorAdapter implements St
     }
 
     @Override
-    public Action inspect(final AtmosphereFramework framework, final Frame frame, final AtmosphereResource r)
+    public Action inspect(final StompFormat stompFormat, final AtmosphereFramework framework, final Frame frame, final AtmosphereResource r)
             throws IOException {
         final StompInterceptor interceptor = interceptors.get(frame.getAction());
 
@@ -251,7 +251,7 @@ public class FrameInterceptor extends AtmosphereInterceptorAdapter implements St
             return Action.CANCELLED;
         }
 
-        return interceptor.inspect(framework, frame, r);
+        return interceptor.inspect(stompFormat, framework, frame, r);
     }
 
     public void setStompFormat(StompFormat stompFormat) {

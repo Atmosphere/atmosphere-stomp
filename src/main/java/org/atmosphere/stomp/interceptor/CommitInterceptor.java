@@ -23,6 +23,7 @@ import org.atmosphere.cpr.AtmosphereInterceptorAdapter;
 import org.atmosphere.cpr.AtmosphereResource;
 import org.atmosphere.stomp.StompInterceptor;
 import org.atmosphere.stomp.protocol.Frame;
+import org.atmosphere.stomp.protocol.StompFormat;
 
 /**
  * <p>
@@ -44,7 +45,7 @@ public class CommitInterceptor extends AtmosphereInterceptorAdapter implements S
      * {@inheritDoc}
      */
     @Override
-    public Action inspect(final AtmosphereFramework framework, final Frame frame, final AtmosphereResource r)  {
+    public Action inspect(final StompFormat stompFormat, final AtmosphereFramework framework, final Frame frame, final AtmosphereResource r)  {
         final Action retval = inspect(r);
 
         return retval;
