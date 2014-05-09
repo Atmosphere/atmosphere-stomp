@@ -1,3 +1,5 @@
 INSTALL
 org.atmosphere.stomp.interceptor.FrameInterceptor
 org.atmosphere.interceptor.AtmosphereResourceLifecycleInterceptor
+EXCLUDE
+org.atmosphere.interceptor.HeartbeatInterceptor

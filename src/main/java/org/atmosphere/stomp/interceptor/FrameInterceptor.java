@@ -185,6 +185,7 @@ public class FrameInterceptor extends AtmosphereInterceptorAdapter implements St
 
         try {
             interceptors = new ConcurrentHashMap<org.atmosphere.stomp.protocol.Action, StompInterceptor>();
+            configureInterceptor(config, ConnectInterceptor.class, org.atmosphere.stomp.protocol.Action.CONNECT, org.atmosphere.stomp.protocol.Action.STOMP);
             configureInterceptor(config, SubscribeInterceptor.class, org.atmosphere.stomp.protocol.Action.SUBSCRIBE);
             configureInterceptor(config, UnsubscribeInterceptor.class, org.atmosphere.stomp.protocol.Action.UNSUBSCRIBE);
             configureInterceptor(config, SendInterceptor.class, org.atmosphere.stomp.protocol.Action.SEND);
@@ -247,7 +248,7 @@ public class FrameInterceptor extends AtmosphereInterceptorAdapter implements St
 
         if (interceptor == null) {
             logger.warn("{} is not supported", frame.getAction().toString(), new UnsupportedOperationException());
-            return Action.CONTINUE;
+            return Action.CANCELLED;
         }
 
         return interceptor.inspect(framework, frame, r);
