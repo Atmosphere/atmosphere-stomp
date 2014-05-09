@@ -65,7 +65,18 @@ public final class Frame {
 
         headers.put(Header.CONTENT_LENGTH, String.valueOf(body == null ? 0 : body.getBytes().length));
         this.headers = Collections.unmodifiableMap(headers);
+    }
 
+    /**
+     * <p>
+     * Builds a new instance without body.
+     * </p>
+     *
+     * @param action the action
+     * @param headers the headers
+     */
+    public Frame(final Action action, final Map<String, String> headers) {
+        this(action, headers, null);
     }
 
     /**
