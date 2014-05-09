@@ -26,7 +26,10 @@ import org.atmosphere.stomp.StompInterceptor;
 import org.atmosphere.stomp.protocol.Frame;
 import org.atmosphere.stomp.protocol.Header;
 import org.atmosphere.stomp.protocol.StompFormat;
+import org.atmosphere.util.Version;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -44,6 +47,11 @@ import java.util.concurrent.TimeUnit;
  * @since 0.2
  */
 public class ConnectInterceptor extends HeartbeatInterceptor implements StompInterceptor {
+
+    /**
+     * Server name sent to client.
+     */
+    private static final String SERVER = "Atmosphere/" + Version.getDotedVersion();
 
     /**
      * Heartbeat desired by client.
@@ -83,9 +91,21 @@ public class ConnectInterceptor extends HeartbeatInterceptor implements StompInt
     @Override
     public Action inspect(final StompFormat stompFormat, final AtmosphereFramework framework, final Frame frame, final AtmosphereResource r) {
         try {
+            // Extracts then clock
             final Integer[] intervals = parseHeartBeat(frame.getHeaders().get(Header.HEART_BEAT));
             desiredHeartbeat.set(intervals[1]);
-            return inspect(r);
+            final Action retval = inspect(r);
+
+            // Send response to client
+            final Map<String, String> headers = new HashMap<String, String>();
+
+            // TODO: include protocol negotiation result in headers
+            headers.put(Header.SESSION, r.uuid());
+            headers.put(Header.SERVER, SERVER);
+
+            r.write(stompFormat.format(new Frame(org.atmosphere.stomp.protocol.Action.CONNECTED, headers)));
+
+            return retval;
         } finally {
             desiredHeartbeat.remove();
         }

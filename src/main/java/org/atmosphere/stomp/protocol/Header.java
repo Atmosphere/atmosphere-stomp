@@ -106,4 +106,14 @@ public interface Header {
      * Error message.
      */
     String MESSAGE = "message";
+
+    /**
+     * ID that identifies the session.
+     */
+    String SESSION = "session";
+
+    /**
+     * Server name and version that exposes STOMP support.
+     */
+    String SERVER = "server";
 }
