@@ -33,6 +33,11 @@ public interface Header {
     String ACCEPT_VERSION = "accept-version";
 
     /**
+     * The supported protocol versions.
+     */
+    String VERSION = "version";
+
+    /**
      * The name of a virtual host that the client wishes to connect to.
      */
     String HOST = "host";

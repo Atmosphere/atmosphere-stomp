@@ -49,6 +49,21 @@ import java.util.concurrent.TimeUnit;
 public class ConnectInterceptor extends HeartbeatInterceptor implements StompInterceptor {
 
     /**
+     * The default supported version.
+     */
+    public static final float DEFAULT_VERSION = 1.0f;
+
+    /**
+     * The highest version we currently support.
+     */
+    public static final float HIGHEST_VERSION = 1.1f;
+
+    /**
+     * Supported versions.
+     */
+    public static final String VERSIONS = String.format("%f,%f", DEFAULT_VERSION, HIGHEST_VERSION);
+
+    /**
      * Server name sent to client.
      */
     private static final String SERVER = "Atmosphere/" + Version.getDotedVersion();
@@ -91,24 +106,66 @@ public class ConnectInterceptor extends HeartbeatInterceptor implements StompInt
     @Override
     public Action inspect(final StompFormat stompFormat, final AtmosphereFramework framework, final Frame frame, final AtmosphereResource r) {
         try {
-            // Extracts then clock
-            final Integer[] intervals = parseHeartBeat(frame.getHeaders().get(Header.HEART_BEAT));
-            desiredHeartbeat.set(intervals[1]);
-            final Action retval = inspect(r);
-
-            // Send response to client
+            // Send headers response to client
             final Map<String, String> headers = new HashMap<String, String>();
 
-            // TODO: include protocol negotiation result in headers
-            headers.put(Header.SESSION, r.uuid());
-            headers.put(Header.SERVER, SERVER);
+            // Protocol negotiation
+            final float version = parseVersion(frame.getHeaders().get(Header.ACCEPT_VERSION));
 
-            r.write(stompFormat.format(new Frame(org.atmosphere.stomp.protocol.Action.CONNECTED, headers)));
+            // No version in common between server and client
+            if (version == -1) {
+                headers.put(Header.VERSION, VERSIONS);
+                r.write(stompFormat.format(new Frame(org.atmosphere.stomp.protocol.Action.ERROR, headers, "Supported protocol versions are " + VERSIONS)));
 
-            return retval;
+                return Action.CANCELLED;
+            } else {
+                // Extracts heartbeat then clock
+                final Integer[] intervals = parseHeartBeat(frame.getHeaders().get(Header.HEART_BEAT));
+                desiredHeartbeat.set(intervals[1]);
+                final Action retval = inspect(r);
+
+                headers.put(Header.VERSION, String.valueOf(version));
+                headers.put(Header.SESSION, r.uuid());
+                headers.put(Header.SERVER, SERVER);
+
+                r.write(stompFormat.format(new Frame(org.atmosphere.stomp.protocol.Action.CONNECTED, headers)));
+
+                return retval;
+            }
         } finally {
             desiredHeartbeat.remove();
         }
+    }
+
+    /**
+     * <p>
+     * Parse the given header value to extract the most appropriate version sent by client. If value is {@code null},
+     * then {@link #DEFAULT_VERSION} is returned. Otherwise, the method looks for the highest version supported by
+     * both client and server. If no version are in common, -1 is returned and an error should be sent
+     * </p>
+     *
+     * @param acceptVersion the header value
+     * @return the extracted version
+     */
+    private float parseVersion(final String acceptVersion) {
+        float retval;
+
+        if (acceptVersion != null) {
+            retval = -1;
+            final String[] versions = acceptVersion.split(",");
+
+            for (final String version : versions) {
+                final float clientVersion = Float.parseFloat(version);
+
+                if (clientVersion == DEFAULT_VERSION || clientVersion == HIGHEST_VERSION) {
+                    retval = Math.max(retval, clientVersion);
+                }
+            }
+        } else {
+            retval = DEFAULT_VERSION;
+        }
+
+        return retval;
     }
 
     /**
