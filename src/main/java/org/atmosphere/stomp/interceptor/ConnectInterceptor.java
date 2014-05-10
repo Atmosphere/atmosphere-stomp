@@ -87,17 +87,7 @@ public class ConnectInterceptor extends HeartbeatInterceptor implements StompInt
      */
     @Override
     protected int extractHeartbeatInterval(final AtmosphereResource resource) {
-        // Extract the desired heartbeat interval
-        // Won't be applied if lower than config value
-        int interval = desiredHeartbeat.get();
-
-        if (interval != 0) {
-            interval = Math.max((int) TimeUnit.SECONDS.convert(interval, TimeUnit.MILLISECONDS), heartbeatFrequencyInSeconds());
-        } else {
-            interval = 0;
-        }
-
-        return interval;
+        return desiredHeartbeat.get();
     }
 
     /**
@@ -121,12 +111,24 @@ public class ConnectInterceptor extends HeartbeatInterceptor implements StompInt
             } else {
                 // Extracts heartbeat then clock
                 final Integer[] intervals = parseHeartBeat(frame.getHeaders().get(Header.HEART_BEAT));
-                desiredHeartbeat.set(intervals[1]);
+
+                // Extract the desired heartbeat interval
+                // Won't be applied if lower than config value
+                int serverInterval = intervals[1];
+
+                if (serverInterval != 0) {
+                    serverInterval = Math.max((int) TimeUnit.SECONDS.convert(serverInterval, TimeUnit.MILLISECONDS), heartbeatFrequencyInSeconds());
+                } else {
+                    serverInterval = 0;
+                }
+
+                desiredHeartbeat.set(serverInterval);
                 final Action retval = inspect(r);
 
                 headers.put(Header.VERSION, String.valueOf(version));
                 headers.put(Header.SESSION, r.uuid());
                 headers.put(Header.SERVER, SERVER);
+                headers.put(Header.HEART_BEAT, serverInterval + "," + intervals[0]);
 
                 r.write(stompFormat.format(new Frame(org.atmosphere.stomp.protocol.Action.CONNECTED, headers)));
 
