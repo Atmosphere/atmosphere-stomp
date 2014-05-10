@@ -28,6 +28,11 @@ package org.atmosphere.stomp.protocol;
  */
 public enum Action {
 
+    /***
+     * When a heartbeat is sent.
+     */
+    NULL,
+
     /**
      * When client connects.
      */

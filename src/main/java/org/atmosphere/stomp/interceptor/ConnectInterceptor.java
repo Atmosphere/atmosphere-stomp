@@ -49,6 +49,11 @@ import java.util.concurrent.TimeUnit;
 public class ConnectInterceptor extends HeartbeatInterceptor implements StompInterceptor {
 
     /**
+     * The padding data for STOMP heartbeat.
+     */
+    public static final byte[] STOMP_HEARTBEAT_DATA = new byte[] { 0x0A, };
+
+    /**
      * The default supported version.
      */
     public static final float DEFAULT_VERSION = 1.0f;
@@ -79,7 +84,7 @@ public class ConnectInterceptor extends HeartbeatInterceptor implements StompInt
     @Override
     public void configure(final AtmosphereConfig config) {
         super.configure(config);
-        paddingText(new byte[] { 0x0A, });
+        paddingText(STOMP_HEARTBEAT_DATA);
     }
 
     /**
@@ -96,6 +101,13 @@ public class ConnectInterceptor extends HeartbeatInterceptor implements StompInt
     @Override
     public Action inspect(final StompFormat stompFormat, final AtmosphereFramework framework, final Frame frame, final AtmosphereResource r) {
         try {
+            // Hack: we suspect a heartbeat here
+            if (org.atmosphere.stomp.protocol.Action.NULL.equals(frame.getAction())) {
+                // TODO: need to dispatch heartbeat event when available in CPR
+                desiredHeartbeat.set(0);
+                return inspect(r);
+            }
+
             // Send headers response to client
             final Map<String, String> headers = new HashMap<String, String>();
 

@@ -38,6 +38,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -185,7 +187,7 @@ public class FrameInterceptor extends AtmosphereInterceptorAdapter implements St
 
         try {
             interceptors = new ConcurrentHashMap<org.atmosphere.stomp.protocol.Action, StompInterceptor>();
-            configureInterceptor(config, ConnectInterceptor.class, org.atmosphere.stomp.protocol.Action.CONNECT, org.atmosphere.stomp.protocol.Action.STOMP);
+            configureInterceptor(config, ConnectInterceptor.class, org.atmosphere.stomp.protocol.Action.CONNECT, org.atmosphere.stomp.protocol.Action.STOMP, org.atmosphere.stomp.protocol.Action.NULL);
             configureInterceptor(config, SubscribeInterceptor.class, org.atmosphere.stomp.protocol.Action.SUBSCRIBE);
             configureInterceptor(config, UnsubscribeInterceptor.class, org.atmosphere.stomp.protocol.Action.UNSUBSCRIBE);
             configureInterceptor(config, SendInterceptor.class, org.atmosphere.stomp.protocol.Action.SEND);
@@ -205,19 +207,20 @@ public class FrameInterceptor extends AtmosphereInterceptorAdapter implements St
      */
     @Override
     public org.atmosphere.cpr.Action inspect(final AtmosphereResource r) {
-        StringBuilder body = null;
+        String body = null;
 
         try {
-            body = IOUtils.readEntirelyAsString(r);
+            body = IOUtils.readEntirelyAsString(r).toString();
 
             // Let the global handler suspend the connection if no action is submitted
             if (body.length() == 0) {
                 return Action.CONTINUE;
+            } else if (Arrays.equals(body.getBytes(), ConnectInterceptor.STOMP_HEARTBEAT_DATA)) {
+                // Particular case: the heartbeat is handled by the ConnectInterceptor
+                return inspect(stompFormat, framework, new Frame(org.atmosphere.stomp.protocol.Action.NULL, new HashMap<String, String>()), r);
+            } else {
+                return inspect(stompFormat, framework, stompFormat.parse(body.substring(0, body.length() - 1)), r);
             }
-
-            body.deleteCharAt(body.length() - 1);
-
-            return inspect(stompFormat, framework, stompFormat.parse(body.toString()), r);
         } catch (final IOException ioe) {
             logger.error("STOMP interceptor fails", ioe);
         } catch (final ParseException pe) {
