@@ -84,7 +84,9 @@ public class ConnectInterceptor extends HeartbeatInterceptor implements StompInt
     @Override
     public void configure(final AtmosphereConfig config) {
         super.configure(config);
-        paddingText(STOMP_HEARTBEAT_DATA);
+
+        // Atmosphere.js does not like empty strings, works fine with "hb".
+        paddingText(/*STOMP_HEARTBEAT_DATA*/"hb".getBytes());
     }
 
     /**
