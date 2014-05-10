@@ -140,7 +140,7 @@ public class ConnectInterceptor extends HeartbeatInterceptor implements StompInt
                 headers.put(Header.VERSION, String.valueOf(version));
                 headers.put(Header.SESSION, r.uuid());
                 headers.put(Header.SERVER, SERVER);
-                headers.put(Header.HEART_BEAT, serverInterval + "," + intervals[0]);
+                headers.put(Header.HEART_BEAT, TimeUnit.MILLISECONDS.convert(serverInterval, TimeUnit.SECONDS) + "," + intervals[0]);
 
                 r.write(stompFormat.format(new Frame(org.atmosphere.stomp.protocol.Action.CONNECTED, headers)));
 
