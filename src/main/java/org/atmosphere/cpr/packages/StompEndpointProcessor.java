@@ -23,6 +23,8 @@ import org.atmosphere.config.managed.Decoder;
 import org.atmosphere.config.managed.Encoder;
 import org.atmosphere.config.service.Message;
 import org.atmosphere.cpr.AtmosphereFramework;
+import org.atmosphere.cpr.AtmosphereHandler;
+import org.atmosphere.cpr.Broadcaster;
 import org.atmosphere.stomp.annotation.StompEndpoint;
 import org.atmosphere.stomp.annotation.StompService;
 import org.atmosphere.stomp.handler.StompSendActionAtmosphereHandler;
@@ -74,49 +76,62 @@ public class StompEndpointProcessor implements Processor<Object> {
         try {
              instance = framework.newClassInstance(Object.class, annotatedClass);
         } catch (Exception iae) {
-             logger.warn("Failed to process class annotated with {}", StompEndpoint.class.getName(), iae);
+            logger.warn("Failed to process class annotated with {}", StompEndpoint.class.getName(), iae);
             return;
         }
 
         // Inspect method
         for (final Method m : annotatedClass.getDeclaredMethods()) {
             logger.debug("Detecting annotation on method {}", m.getName());
+            detectStompService(framework, m, instance);
+        }
+    }
 
-            // Stomp service detected
-            if (m.isAnnotationPresent(StompService.class)) {
+    /**
+     * <p>
+     * Detects if the given method is annotated with StompService and creates the appropriate handler.
+     * </p>
+     *
+     * @param framework the framework instance
+     * @param method the method to inspect
+     * @param instance the annotated class instance
+     */
+    private void detectStompService(final AtmosphereFramework framework, final Method method, final Object instance) {
+        // Stomp service detected
+        if (method.isAnnotationPresent(StompService.class)) {
 
-                // The destination will be the broadcaster mapping
-                final String destination = m.getAnnotation(StompService.class).destination();
+            // The destination will be the broadcaster mapping
+            final String destination = method.getAnnotation(StompService.class).destination();
 
-                if (destination == null || destination.isEmpty()) {
-                    logger.warn("The destination in {} must not be empty", StompService.class.getName(), new IllegalStateException());
-                } else {
-                    // Optional message annotation with encoders and decoders
-                    final Decoder<String, Object> decoder;
-                    final Encoder<Object, String> encoder;
+            if (destination == null || destination.isEmpty()) {
+                logger.warn("The destination in {} must not be empty", StompService.class.getName(), new IllegalStateException());
+            } else {
+                // Optional message annotation with encoders and decoders
+                final Decoder<String, Object> decoder;
+                final Encoder<Object, String> encoder;
 
-                    if (m.isAnnotationPresent(Message.class)) {
-                        try {
-                            // TODO: support many encoders/decoders ?
-                            final Message message = m.getAnnotation(Message.class);
-                            decoder = framework.newClassInstance(Decoder.class, message.decoders()[0]);
-                            encoder = framework.newClassInstance(Encoder.class, message.encoders()[0]);
-                        } catch (Exception iae) {
-                            logger.warn("Failed to process annotation {}", Message.class.getName(), iae);
-                            continue;
-                        }
-                    } else {
-                        decoder = null;
-                        encoder = null;
-                    }
-
-                    // Now add to the framework the handler for the declared destination
+                if (method.isAnnotationPresent(Message.class)) {
                     try {
-                        framework.addAtmosphereHandler(destination, new StompSendActionAtmosphereHandler(instance, m, encoder, decoder,
-                                framework.getBroadcasterFactory().get(destination)));
-                    } catch (IllegalArgumentException iae) {
-                        logger.warn("Method {} has not the required signature to be a {}", m.getName(), iae);
+                        // TODO: support many encoders/decoders ?
+                        final Message message = method.getAnnotation(Message.class);
+                        decoder = framework.newClassInstance(Decoder.class, message.decoders()[0]);
+                        encoder = framework.newClassInstance(Encoder.class, message.encoders()[0]);
+                    } catch (Exception iae) {
+                        logger.warn("Failed to process annotation {}", Message.class.getName(), iae);
+                        return;
                     }
+                } else {
+                    decoder = null;
+                    encoder = null;
+                }
+
+                // Now add to the framework the handler for the declared destination
+                try {
+                    final Broadcaster b = framework.getBroadcasterFactory().get(destination);
+                    final AtmosphereHandler ah = new StompSendActionAtmosphereHandler(instance, method, encoder, decoder, b);
+                    framework.addAtmosphereHandler(destination, ah);
+                } catch (IllegalArgumentException iae) {
+                    logger.warn("Method {} has not the required signature to be a {}", method.getName(), iae);
                 }
             }
         }
