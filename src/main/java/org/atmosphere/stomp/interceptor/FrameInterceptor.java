@@ -244,6 +244,9 @@ public class FrameInterceptor extends AtmosphereInterceptorAdapter implements St
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Action inspect(final StompFormat stompFormat, final AtmosphereFramework framework, final Frame frame, final AtmosphereResource r)
             throws IOException {
@@ -257,10 +260,28 @@ public class FrameInterceptor extends AtmosphereInterceptorAdapter implements St
         return interceptor.inspect(stompFormat, framework, frame, r);
     }
 
-    public void setStompFormat(StompFormat stompFormat) {
+    /**
+     * <p>
+     * Sets the {@link StompFormat} that wire frames.
+     * </p>
+     *
+     * @param stompFormat the new formatter
+     */
+    public void setStompFormat(final StompFormat stompFormat) {
         this.stompFormat = stompFormat;
     }
 
+    /**
+     * <p>
+     * Adds the appropriate interceptor for each action.
+     * </p>
+     *
+     * @param config the configuration
+     * @param clazz the interceptor
+     * @param action the actions
+     * @throws InstantiationException if interceptor class can't be instantiated
+     * @throws IllegalAccessException if interceptor class can't be instantiated
+     */
     private void configureInterceptor(final AtmosphereConfig config,
                                       final Class<? extends StompInterceptor> clazz,
                                       final org.atmosphere.stomp.protocol.Action ... action)
