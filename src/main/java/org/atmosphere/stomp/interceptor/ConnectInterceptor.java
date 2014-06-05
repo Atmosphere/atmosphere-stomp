@@ -17,10 +17,15 @@
 
 package org.atmosphere.stomp.interceptor;
 
+import org.atmosphere.HeartbeatAtmosphereResourceEvent;
 import org.atmosphere.cpr.Action;
 import org.atmosphere.cpr.AtmosphereConfig;
 import org.atmosphere.cpr.AtmosphereFramework;
 import org.atmosphere.cpr.AtmosphereResource;
+import org.atmosphere.cpr.AtmosphereResourceEvent;
+import org.atmosphere.cpr.AtmosphereResourceEventListenerAdapter;
+import org.atmosphere.cpr.AtmosphereResourceHeartbeatEventListener;
+import org.atmosphere.cpr.AtmosphereResourceImpl;
 import org.atmosphere.interceptor.HeartbeatInterceptor;
 import org.atmosphere.stomp.StompInterceptor;
 import org.atmosphere.stomp.protocol.Frame;
@@ -105,7 +110,22 @@ public class ConnectInterceptor extends HeartbeatInterceptor implements StompInt
         try {
             // Hack: we suspect a heartbeat here
             if (org.atmosphere.stomp.protocol.Action.NULL.equals(frame.getAction())) {
-                // TODO: need to dispatch heartbeat event when available in CPR
+                // Dispatch an event to notify that a heartbeat has been intercepted
+                // TODO: see https://github.com/Atmosphere/atmosphere/issues/1561
+                final AtmosphereResourceEvent event = new HeartbeatAtmosphereResourceEvent(AtmosphereResourceImpl.class.cast(r));
+
+                if (AtmosphereResourceHeartbeatEventListener.class.isAssignableFrom(r.getAtmosphereHandler().getClass())) {
+                    r.addEventListener(new AtmosphereResourceEventListenerAdapter.OnHeartbeat() {
+                        @Override
+                        public void onHeartbeat(AtmosphereResourceEvent event) {
+                            AtmosphereResourceHeartbeatEventListener.class.cast(r.getAtmosphereHandler()).onHeartbeat(event);
+                        }
+                    });
+                }
+
+                // Fire event
+                r.notifyListeners(event);
+
                 desiredHeartbeat.set(0);
                 return inspect(r);
             }

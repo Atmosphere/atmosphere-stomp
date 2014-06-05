@@ -21,12 +21,15 @@ import org.atmosphere.config.managed.Decoder;
 import org.atmosphere.config.managed.Encoder;
 import org.atmosphere.config.service.Message;
 import org.atmosphere.cpr.AtmosphereResource;
+import org.atmosphere.cpr.AtmosphereResourceEvent;
+import org.atmosphere.cpr.AtmosphereResourceHeartbeatEventListener;
 import org.atmosphere.cpr.Broadcaster;
 import org.atmosphere.handler.AbstractReflectorAtmosphereHandler;
 import org.atmosphere.stomp.interceptor.FrameInterceptor;
 import org.atmosphere.stomp.annotation.StompEndpoint;
 import org.atmosphere.stomp.protocol.Action;
 import org.atmosphere.stomp.protocol.Header;
+import org.atmosphere.util.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,7 +48,9 @@ import java.lang.reflect.Method;
  * @since 0.1
  * @version 1.0
  */
-public class StompSendActionAtmosphereHandler extends AbstractReflectorAtmosphereHandler {
+public class StompSendActionAtmosphereHandler
+        extends AbstractReflectorAtmosphereHandler
+        implements AtmosphereResourceHeartbeatEventListener {
 
     /**
      * Method signature requirement message.
@@ -87,6 +92,11 @@ public class StompSendActionAtmosphereHandler extends AbstractReflectorAtmospher
     private final Broadcaster broadcaster;
 
     /**
+     * The heartbeat listener.
+     */
+    private final Method onHeartbeatMethod;
+
+    /**
      * <p>
      * Creates a new instance.
      * </p>
@@ -96,16 +106,19 @@ public class StompSendActionAtmosphereHandler extends AbstractReflectorAtmospher
      * @param encoder encodes into expected parameter type
      * @param decoder converts returned type into {@code String} wrapped in text frame
      * @param broadcaster the broadcaster associated to the destination declared in the annotated method
+     * @param onHeartbeatMethod the heartbeat method
      */
     public StompSendActionAtmosphereHandler(final Object toProxy,
                                             final Method method,
                                             final Encoder<Object, String> encoder,
                                             final Decoder<String, ?> decoder,
-                                            final Broadcaster broadcaster) {
+                                            final Broadcaster broadcaster,
+                                            final Method onHeartbeatMethod) {
         this.toProxy = toProxy;
         this.method = method;
         this.encoder = encoder;
         this.broadcaster = broadcaster;
+        this.onHeartbeatMethod = onHeartbeatMethod;
 
         // Detect appropriate provider for each parameter type
         final Class<?>[] paramTypes = method.getParameterTypes();
@@ -192,13 +205,22 @@ public class StompSendActionAtmosphereHandler extends AbstractReflectorAtmospher
     }
 
     /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void onHeartbeat(final AtmosphereResourceEvent event) {
+        if (onHeartbeatMethod != null && !Utils.pollableTransport(event.getResource().transport())) {
+            Utils.invoke(toProxy, onHeartbeatMethod, event);
+        }
+    }
+
+    /**
      * <p>
      * Provides a parameter of expected type from the given {@link AtmosphereResource}.
      * </p>
      *
      * @author Guillaume DROUET
      * @since 0.1
-
      * @version 1.0
      */
     private interface ParamProvider {

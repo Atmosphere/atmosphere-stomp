@@ -76,7 +76,7 @@ public class StompTest {
 
         // Detect service
         framework.addAnnotationPackage(StompBusinessService.class);
-        //framework.addAnnotationPackage(HeartbeatTest.HeartbeatStompEndpoint.class);
+        framework.addAnnotationPackage(HeartbeatTest.HeartbeatStompEndpoint.class);
 
         // Global handler: mandatory
         framework.init(new ServletConfig() {
