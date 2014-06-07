@@ -25,10 +25,12 @@ import org.atmosphere.config.service.Heartbeat;
 import org.atmosphere.config.service.Message;
 import org.atmosphere.cpr.AtmosphereFramework;
 import org.atmosphere.cpr.AtmosphereHandler;
+import org.atmosphere.cpr.AtmosphereResourceEvent;
 import org.atmosphere.cpr.Broadcaster;
 import org.atmosphere.stomp.annotation.StompEndpoint;
 import org.atmosphere.stomp.annotation.StompService;
 import org.atmosphere.stomp.handler.StompSendActionAtmosphereHandler;
+import org.atmosphere.util.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -69,6 +71,29 @@ public class StompEndpointProcessor implements Processor<Object> {
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     /**
+     * The selected heartbeat method.
+     */
+    private static Method onHeartbeatMethod;
+
+    /**
+     * The object the method belongs to.
+     */
+    private static Object heartbeatHandler;
+
+    /**
+     * <p>
+     * Invokes the heartbeat method if not {@code null} which has been detected during endpoint detection.
+     * </p>
+     *
+     * @param event the event
+     */
+    public static void invokeOnHeartbeat(final AtmosphereResourceEvent event) {
+        if (onHeartbeatMethod != null) {
+            Utils.invoke(heartbeatHandler, onHeartbeatMethod, event);
+        }
+    }
+
+    /**
      * {@inheritDoc}
      */
     @Override
@@ -84,19 +109,18 @@ public class StompEndpointProcessor implements Processor<Object> {
             return;
         }
 
-        Method onHeartbeatMethod = null;
         final List<Method> list = Arrays.asList(annotatedClass.getDeclaredMethods());
+        heartbeatHandler = instance;
 
         // Look for heartbeat listener first
-        // Only one method can be notified per class
+        // Only one method can be notified
         for (final Iterator<Method> it = list.iterator(); it.hasNext() && onHeartbeatMethod == null;) {
             onHeartbeatMethod = detectHeartbeat(it.next());
         }
 
         // Look for service
         for (final Method m : annotatedClass.getDeclaredMethods()) {
-            // If an handler is created, then the onHeartbeatMethod will take null so only one call will be performed
-            onHeartbeatMethod = detectStompService(framework, m, instance, onHeartbeatMethod);
+            detectStompService(framework, m, instance);
         }
     }
 
@@ -123,12 +147,10 @@ public class StompEndpointProcessor implements Processor<Object> {
      * @param framework the framework instance
      * @param method the method to inspect
      * @param instance the annotated class instance
-     * @param onHeartbeatMethod the heartbeat method
      */
-    private Method detectStompService(final AtmosphereFramework framework,
-                                      final Method method,
-                                      final Object instance,
-                                      final Method onHeartbeatMethod) {
+    private void detectStompService(final AtmosphereFramework framework,
+                                    final Method method,
+                                    final Object instance) {
         logger.debug("Detecting annotation on method {}", method.getName());
 
         // Stomp service detected
@@ -152,7 +174,7 @@ public class StompEndpointProcessor implements Processor<Object> {
                         encoder = framework.newClassInstance(Encoder.class, message.encoders()[0]);
                     } catch (Exception iae) {
                         logger.warn("Failed to process annotation {}", Message.class.getName(), iae);
-                        return onHeartbeatMethod;
+                        return;
                     }
                 } else {
                     decoder = null;
@@ -164,15 +186,10 @@ public class StompEndpointProcessor implements Processor<Object> {
                     final Broadcaster b = framework.getBroadcasterFactory().get(destination);
                     final AtmosphereHandler ah = new StompSendActionAtmosphereHandler(instance, method, encoder, decoder, b, onHeartbeatMethod);
                     framework.addAtmosphereHandler(destination, ah);
-
-                    // we return null so only one handler will receive heartbeat
-                    return null;
                 } catch (IllegalArgumentException iae) {
                     logger.warn("Method {} has not the required signature to be a {}", method.getName(), iae);
                 }
             }
         }
-
-        return onHeartbeatMethod;
     }
 }

@@ -24,8 +24,8 @@ import org.atmosphere.cpr.AtmosphereFramework;
 import org.atmosphere.cpr.AtmosphereResource;
 import org.atmosphere.cpr.AtmosphereResourceEvent;
 import org.atmosphere.cpr.AtmosphereResourceEventListenerAdapter;
-import org.atmosphere.cpr.AtmosphereResourceHeartbeatEventListener;
 import org.atmosphere.cpr.AtmosphereResourceImpl;
+import org.atmosphere.cpr.packages.StompEndpointProcessor;
 import org.atmosphere.interceptor.HeartbeatInterceptor;
 import org.atmosphere.stomp.StompInterceptor;
 import org.atmosphere.stomp.protocol.Frame;
@@ -114,14 +114,12 @@ public class ConnectInterceptor extends HeartbeatInterceptor implements StompInt
                 // TODO: see https://github.com/Atmosphere/atmosphere/issues/1561
                 final AtmosphereResourceEvent event = new HeartbeatAtmosphereResourceEvent(AtmosphereResourceImpl.class.cast(r));
 
-                if (AtmosphereResourceHeartbeatEventListener.class.isAssignableFrom(r.getAtmosphereHandler().getClass())) {
-                    r.addEventListener(new AtmosphereResourceEventListenerAdapter.OnHeartbeat() {
-                        @Override
-                        public void onHeartbeat(AtmosphereResourceEvent event) {
-                            AtmosphereResourceHeartbeatEventListener.class.cast(r.getAtmosphereHandler()).onHeartbeat(event);
-                        }
-                    });
-                }
+                r.addEventListener(new AtmosphereResourceEventListenerAdapter.OnHeartbeat() {
+                    @Override
+                    public void onHeartbeat(AtmosphereResourceEvent event) {
+                        StompEndpointProcessor.invokeOnHeartbeat(event);
+                    }
+                });
 
                 // Fire event
                 r.notifyListeners(event);
