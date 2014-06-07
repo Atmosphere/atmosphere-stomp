@@ -20,6 +20,7 @@ package org.atmosphere.stomp.interceptor;
 import org.atmosphere.cpr.Action;
 import org.atmosphere.cpr.AtmosphereConfig;
 import org.atmosphere.cpr.AtmosphereFramework;
+import org.atmosphere.cpr.AtmosphereHandler;
 import org.atmosphere.cpr.AtmosphereInterceptorAdapter;
 import org.atmosphere.cpr.AtmosphereResource;
 import org.atmosphere.cpr.AtmosphereResourceSessionFactory;
@@ -182,10 +183,10 @@ public class FrameInterceptor extends AtmosphereInterceptorAdapter implements St
         arsf = AtmosphereResourceSessionFactory.getDefault();
         setStompFormat(PropertyClass.STOMP_FORMAT_CLASS.retrieve(StompFormat.class, config));
 
-        // TODO: user must map AtmosphereServlet to /stomp in web.xml, can we offer a chance to set a custom location ?
-        framework.addAtmosphereHandler("/stomp", new AbstractReflectorAtmosphereHandler.Default());
-
         try {
+            // TODO: user must map AtmosphereServlet to /stomp in web.xml, can we offer a chance to set a custom location ?
+            framework.addAtmosphereHandler("/stomp", framework.newClassInstance(AtmosphereHandler.class, AbstractReflectorAtmosphereHandler.Default.class));
+
             interceptors = new ConcurrentHashMap<org.atmosphere.stomp.protocol.Action, StompInterceptor>();
             configureInterceptor(config, ConnectInterceptor.class, org.atmosphere.stomp.protocol.Action.CONNECT, org.atmosphere.stomp.protocol.Action.STOMP, org.atmosphere.stomp.protocol.Action.NULL);
             configureInterceptor(config, SubscribeInterceptor.class, org.atmosphere.stomp.protocol.Action.SUBSCRIBE);
@@ -230,6 +231,9 @@ public class FrameInterceptor extends AtmosphereInterceptorAdapter implements St
         return Action.CANCELLED;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void postInspect(final AtmosphereResource atmosphereResource) {
         // The client can reconnects while he has already subscribed different destinations
