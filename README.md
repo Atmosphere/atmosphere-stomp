@@ -5,7 +5,7 @@
      <dependency>
          <groupId>org.atmosphere</groupId>
          <artifactId>atmosphere-stomp</artifactId>
-         <version>0.1</version>
+         <version>0.2</version>
       </dependency>
 ```
 
@@ -28,6 +28,11 @@ STOMP support. The following table shows the associated versions:
         <td>0.1</td>
         <td>2.2.0-RC1</td>
         <td>2.2.0</td>
+    </tr>
+    <tr>
+        <td>0.1</td>
+        <td>2.2.0-RC3</td>
+        <td>2.2.2</td>
     </tr>
 </table>
 
