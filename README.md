@@ -30,7 +30,7 @@ STOMP support. The following table shows the associated versions:
         <td>2.2.0</td>
     </tr>
     <tr>
-        <td>0.1</td>
+        <td>0.2</td>
         <td>2.2.0-RC3</td>
         <td>2.2.2</td>
     </tr>
