@@ -9,7 +9,7 @@
     <groupId>org.atmosphere</groupId>
     <artifactId>atmosphere-stomp</artifactId>
     <name>atmosphere-stomp</name>
-    <version>0.2-SNAPSHOT</version>
+    <version>0.2</version>
     <packaging>jar</packaging>
     <description>
         STOMP for Atmosphere
