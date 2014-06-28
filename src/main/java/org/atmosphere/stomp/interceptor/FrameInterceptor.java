@@ -192,6 +192,7 @@ public class FrameInterceptor extends AtmosphereInterceptorAdapter implements St
             configureInterceptor(config, SubscribeInterceptor.class, org.atmosphere.stomp.protocol.Action.SUBSCRIBE);
             configureInterceptor(config, UnsubscribeInterceptor.class, org.atmosphere.stomp.protocol.Action.UNSUBSCRIBE);
             configureInterceptor(config, SendInterceptor.class, org.atmosphere.stomp.protocol.Action.SEND);
+            configureInterceptor(config, SendInterceptor.class, org.atmosphere.stomp.protocol.Action.DISCONNECT);
 
             final BroadcastFilterLifecycle filter = framework.newClassInstance(BroadcastFilterLifecycle.class, StompBroadcastFilter.class);
             framework.broadcasterFilters(filter);
