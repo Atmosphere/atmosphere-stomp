@@ -32,6 +32,7 @@ import java.io.IOException;
 import java.util.Enumeration;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Pattern;
 
@@ -59,6 +60,11 @@ public class StompTest {
      * Action injected by formatter. Could be change on the fly inside tests.
      */
     org.atmosphere.stomp.protocol.Action action = org.atmosphere.stomp.protocol.Action.SEND;
+
+    /**
+     * Set to true when user disconnects.
+     */
+    protected final AtomicBoolean disconnect = new AtomicBoolean(false);
 
     /**
      * <p>
@@ -215,6 +221,14 @@ public class StompTest {
             ((AtmosphereResourceImpl) ar).transport(AtmosphereResource.TRANSPORT.WEBSOCKET);
         }
 
+        ar.addEventListener(new AtmosphereResourceEventListenerAdapter.OnDisconnect() {
+
+            @Override
+            public void onDisconnect(final AtmosphereResourceEvent event) {
+                disconnect.set(true);
+            }
+        });
+
         if (bindToRequest) {
             req.setAttribute(FrameworkConfig.INJECTED_ATMOSPHERE_RESOURCE, ar);
             framework.arFactory.resources().put(ar.uuid(), ar);
@@ -237,6 +251,26 @@ public class StompTest {
         b.addAtmosphereResource(ar);
     }
 
+    /**
+     * <p>
+     * Runs a message as specified by {@link #runMessage(String, String, AtmosphereRequest, AtmosphereResponse, boolean, boolean)}
+     * and doesn't binds the resource to the request
+     * </p>
+     *
+     * @param regex the expected regex
+     * @param destination the destination
+     * @param req the request
+     * @param res the response
+     * @param addToBroadcaster the broadcaster
+     * @throws Exception if test fails
+     */
+    void runMessage(final String regex,
+                    final String destination,
+                    final AtmosphereRequest req,
+                    final AtmosphereResponse res,
+                    final boolean addToBroadcaster) throws Exception {
+        runMessage(regex, destination, req, res, addToBroadcaster, false);
+    }
 
     /**
      * <p>
@@ -245,15 +279,21 @@ public class StompTest {
      * </p>
      *
      * @param regex the expected regex
+     * @param destination the destination
+     * @param req the request
+     * @param res the response
+     * @param addToBroadcaster the broadcaster
+     * @param bindToRequest bind the new resource to the request or not
      * @throws Exception if test fails
      */
     void runMessage(final String regex,
                     final String destination,
                     final AtmosphereRequest req,
                     final AtmosphereResponse res,
-                    final boolean addToBroadcaster)
+                    final boolean addToBroadcaster,
+                    final boolean bindToRequest)
             throws Exception {
-        final AtmosphereResource ar = newAtmosphereResource(destination, req, res, false);
+        final AtmosphereResource ar = newAtmosphereResource(destination, req, res, bindToRequest);
 
         // Wait until message has been broadcasted
         final CountDownLatch countDownLatch = new CountDownLatch(1);

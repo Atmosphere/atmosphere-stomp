@@ -19,6 +19,7 @@ package org.atmosphere.cpr;
 
 import org.atmosphere.stomp.protocol.Action;
 import org.atmosphere.stomp.test.StompBusinessService;
+import org.testng.Assert;
 import org.testng.annotations.Test;
 
 /**
@@ -103,9 +104,25 @@ public class StompInterceptorTest extends StompTest {
         final AtmosphereResponse response = newResponse();
         final String destination = StompBusinessService.DESTINATION_ERROR;
 
-        // Exception an error
+        // Expect an error
         action = Action.SEND;
         final AtmosphereResource ar = newAtmosphereResource(destination, newRequest(destination), response, false);
         runMessage("(.*)?ERROR.*", destination, ar.getRequest(), response, false);
+    }
+
+    /**
+     * <p>
+     * Tests when user disconnects.
+     * </p>
+     *
+     * @throws Exception if test fails
+     */
+    @Test
+    public void disconnectTest() throws Exception {
+        final AtmosphereResponse response = newResponse();
+        final String destination = StompBusinessService.DESTINATION_HELLO_WORLD2;
+        action = Action.DISCONNECT;
+        runMessage(".*", destination, newRequest(destination), response, true, true);
+        Assert.assertTrue(disconnect.get());
     }
 }

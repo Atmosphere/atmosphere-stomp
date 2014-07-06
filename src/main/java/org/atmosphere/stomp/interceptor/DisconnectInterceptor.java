@@ -18,9 +18,12 @@
 package org.atmosphere.stomp.interceptor;
 
 import org.atmosphere.cpr.Action;
+import org.atmosphere.cpr.AsynchronousProcessor;
+import org.atmosphere.cpr.AtmosphereConfig;
 import org.atmosphere.cpr.AtmosphereFramework;
 import org.atmosphere.cpr.AtmosphereInterceptorAdapter;
 import org.atmosphere.cpr.AtmosphereResource;
+import org.atmosphere.cpr.AtmosphereResourceEventImpl;
 import org.atmosphere.stomp.StompInterceptor;
 import org.atmosphere.stomp.protocol.Frame;
 import org.atmosphere.stomp.protocol.StompFormat;
@@ -39,13 +42,32 @@ import java.io.IOException;
 public class DisconnectInterceptor extends AtmosphereInterceptorAdapter implements StompInterceptor {
 
     /**
+     * Configured asynchronous processor.
+     */
+    private AsynchronousProcessor p;
+
+    /**
      * {@inheritDoc}
      */
     @Override
-    public Action inspect(final StompFormat stompFormat, final AtmosphereFramework framework, final Frame frame, final AtmosphereResource resource)
-            throws IOException {
-        final Action retval = inspect(resource);
-        return retval;
+    public void configure(final AtmosphereConfig config) {
+        if (AsynchronousProcessor.class.isAssignableFrom(config.framework().getAsyncSupport().getClass())) {
+            p = AsynchronousProcessor.class.cast(config.framework().getAsyncSupport());
+        }
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Action inspect(final StompFormat stompFormat,
+                          final AtmosphereFramework framework,
+                          final Frame frame,
+                          final AtmosphereResource resource)
+            throws IOException {
+        // Block websocket closing detection
+        AtmosphereResourceEventImpl.class.cast(resource.getAtmosphereResourceEvent()).isClosedByClient(true);
+        p.completeLifecycle(resource, false);
+        return Action.CANCELLED;
+    }
 }
