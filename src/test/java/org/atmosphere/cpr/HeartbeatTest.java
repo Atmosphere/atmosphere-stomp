@@ -23,6 +23,7 @@ import org.atmosphere.stomp.annotation.StompService;
 import org.atmosphere.stomp.interceptor.ConnectInterceptor;
 import org.testng.annotations.Test;
 
+import java.util.HashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.testng.Assert.assertEquals;
@@ -55,7 +56,7 @@ public class HeartbeatTest extends StompTest {
         final String d = HeartbeatStompEndpoint.DESTINATION;
 
         final AtmosphereResponse response = newResponse();
-        final AtmosphereRequest request = newRequest(d,new String(ConnectInterceptor.STOMP_HEARTBEAT_DATA));
+        final AtmosphereRequest request = newRequest(d, new String(ConnectInterceptor.STOMP_HEARTBEAT_DATA), new HashMap<String, String>());
         AtmosphereResource ar = newAtmosphereResource(d, request, response, true);
         processor.service(ar.getRequest(), response);
 

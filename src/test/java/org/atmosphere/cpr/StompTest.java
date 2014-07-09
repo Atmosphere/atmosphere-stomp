@@ -30,6 +30,8 @@ import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import java.io.IOException;
 import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -153,7 +155,20 @@ public class StompTest {
      * @return the request
      */
     AtmosphereRequest newRequest(final String destination) {
-        return newRequest(destination, toRead(destination));
+        return newRequest(destination, toRead(destination), new HashMap<String, String>());
+    }
+
+    /**
+     * <p>
+     * Builds a new request with headers.
+     * </p>
+     *
+     * @param destination the destination's header value in the request frame
+     * @param headers the headers
+     * @return the request
+     */
+    AtmosphereRequest newRequest(final String destination, final Map<String, String> headers) {
+        return newRequest(destination, toRead(destination), headers);
     }
 
     /**
@@ -162,13 +177,16 @@ public class StompTest {
      * </p>
      *
      * @param destination the destination's header value in the request frame
+     * @param body the body content
+     * @param headers the headers
      * @return the request
      */
-    AtmosphereRequest newRequest(final String destination, final String body) {
+    AtmosphereRequest newRequest(final String destination, final String body, final Map<String, String> headers) {
         final AtmosphereRequest req = new AtmosphereRequest.Builder()
                 .pathInfo(destination)
                 .method("GET")
                 .body(body)
+                .headers(headers)
                 .build();
 
         req.setAttribute(ApplicationConfig.SUSPENDED_ATMOSPHERE_RESOURCE_UUID, "4000");
@@ -217,6 +235,7 @@ public class StompTest {
         } else {
             ar.getRequest().body(req.body().asString());
             ar.getRequest().body(req.getInputStream());
+            ar.getRequest().headers(req.headersMap());
             ((AtmosphereResourceImpl) ar).atmosphereHandler(ah);
             ((AtmosphereResourceImpl) ar).transport(AtmosphereResource.TRANSPORT.WEBSOCKET);
         }

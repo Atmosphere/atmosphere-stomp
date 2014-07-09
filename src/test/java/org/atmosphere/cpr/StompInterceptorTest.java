@@ -22,6 +22,9 @@ import org.atmosphere.stomp.test.StompBusinessService;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * <p>
  * Test suite for STOMP protocol support.
@@ -121,8 +124,18 @@ public class StompInterceptorTest extends StompTest {
     public void disconnectTest() throws Exception {
         final AtmosphereResponse response = newResponse();
         final String destination = StompBusinessService.DESTINATION_HELLO_WORLD2;
+
+        // Send disconnect
         action = Action.DISCONNECT;
-        runMessage(".*", destination, newRequest(destination), response, true, true);
+        final AtmosphereRequest request = newRequest(destination);
+        runMessage(".*", destination, request, response, true, true);
+
+        // Close connection
+        final Map<String, String> headers = new HashMap<String, String>();
+        headers.put(HeaderConfig.X_ATMOSPHERE_TRANSPORT, HeaderConfig.DISCONNECT_TRANSPORT_MESSAGE);
+        runMessage(".*", destination, newRequest(destination, headers), response, true, true);
+
+        // Check
         Assert.assertTrue(disconnect.get());
     }
 }
