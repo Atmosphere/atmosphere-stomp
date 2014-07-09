@@ -20,10 +20,8 @@ package org.atmosphere.stomp.interceptor;
 import org.atmosphere.cpr.Action;
 import org.atmosphere.cpr.AtmosphereFramework;
 import org.atmosphere.cpr.AtmosphereInterceptorAdapter;
-import org.atmosphere.cpr.AtmosphereResource;
 import org.atmosphere.stomp.StompInterceptor;
 import org.atmosphere.stomp.protocol.Frame;
-import org.atmosphere.stomp.protocol.StompFormat;
 
 /**
  * <p>
@@ -45,8 +43,8 @@ public class AbortInterceptor extends AtmosphereInterceptorAdapter implements St
      * {@inheritDoc}
      */
     @Override
-    public Action inspect(final StompFormat stompFormat, final AtmosphereFramework framework, final Frame frame, final AtmosphereResource r)  {
-        final Action retval = inspect(r);
+    public Action inspect(final AtmosphereFramework framework, final Frame frame, final FrameInterceptor.StompAtmosphereResource r) {
+        final Action retval = inspect(r.getResource());
 
         return retval;
     }

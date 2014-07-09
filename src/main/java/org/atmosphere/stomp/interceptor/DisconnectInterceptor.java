@@ -20,11 +20,9 @@ package org.atmosphere.stomp.interceptor;
 import org.atmosphere.cpr.Action;
 import org.atmosphere.cpr.AtmosphereFramework;
 import org.atmosphere.cpr.AtmosphereInterceptorAdapter;
-import org.atmosphere.cpr.AtmosphereResource;
 import org.atmosphere.stomp.StompInterceptor;
 import org.atmosphere.stomp.protocol.Frame;
 import org.atmosphere.stomp.protocol.Header;
-import org.atmosphere.stomp.protocol.StompFormat;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -45,10 +43,9 @@ public class DisconnectInterceptor extends AtmosphereInterceptorAdapter implemen
      * {@inheritDoc}
      */
     @Override
-    public Action inspect(final StompFormat stompFormat,
-                          final AtmosphereFramework framework,
+    public Action inspect(final AtmosphereFramework framework,
                           final Frame frame,
-                          final AtmosphereResource resource)
+                          final FrameInterceptor.StompAtmosphereResource r)
             throws IOException {
         final Map<String, String> headers = new HashMap<String, String>();
         final String receiptId = frame.getHeaders().get(Header.RECEIPT_ID);
@@ -57,7 +54,7 @@ public class DisconnectInterceptor extends AtmosphereInterceptorAdapter implemen
             headers.put(Header.RECEIPT_ID, frame.getHeaders().get(Header.RECEIPT_ID));
         }
 
-        resource.write(stompFormat.format(new Frame(org.atmosphere.stomp.protocol.Action.RECEIPT, headers)));
+        r.write(org.atmosphere.stomp.protocol.Action.RECEIPT, headers);
         return Action.CONTINUE;
     }
 }

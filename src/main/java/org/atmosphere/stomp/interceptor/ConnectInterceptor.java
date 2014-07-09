@@ -30,7 +30,6 @@ import org.atmosphere.interceptor.HeartbeatInterceptor;
 import org.atmosphere.stomp.StompInterceptor;
 import org.atmosphere.stomp.protocol.Frame;
 import org.atmosphere.stomp.protocol.Header;
-import org.atmosphere.stomp.protocol.StompFormat;
 import org.atmosphere.util.Version;
 
 import java.util.HashMap;
@@ -106,15 +105,15 @@ public class ConnectInterceptor extends HeartbeatInterceptor implements StompInt
      * {@inheritDoc}
      */
     @Override
-    public Action inspect(final StompFormat stompFormat, final AtmosphereFramework framework, final Frame frame, final AtmosphereResource r) {
+    public Action inspect(final AtmosphereFramework framework, final Frame frame, final FrameInterceptor.StompAtmosphereResource r) {
         try {
             // Hack: we suspect a heartbeat here
             if (org.atmosphere.stomp.protocol.Action.NULL.equals(frame.getAction())) {
                 // Dispatch an event to notify that a heartbeat has been intercepted
                 // TODO: see https://github.com/Atmosphere/atmosphere/issues/1561
-                final AtmosphereResourceEvent event = new HeartbeatAtmosphereResourceEvent(AtmosphereResourceImpl.class.cast(r));
+                final AtmosphereResourceEvent event = new HeartbeatAtmosphereResourceEvent(AtmosphereResourceImpl.class.cast(r.getResource()));
 
-                r.addEventListener(new AtmosphereResourceEventListenerAdapter.OnHeartbeat() {
+                r.getResource().addEventListener(new AtmosphereResourceEventListenerAdapter.OnHeartbeat() {
                     @Override
                     public void onHeartbeat(AtmosphereResourceEvent event) {
                         StompEndpointProcessor.invokeOnHeartbeat(event);
@@ -122,10 +121,10 @@ public class ConnectInterceptor extends HeartbeatInterceptor implements StompInt
                 });
 
                 // Fire event
-                r.notifyListeners(event);
+                r.getResource().notifyListeners(event);
 
                 desiredHeartbeat.set(0);
-                return inspect(r);
+                return inspect(r.getResource());
             }
 
             // Send headers response to client
@@ -137,7 +136,7 @@ public class ConnectInterceptor extends HeartbeatInterceptor implements StompInt
             // No version in common between server and client
             if (version == -1) {
                 headers.put(Header.VERSION, VERSIONS);
-                r.write(stompFormat.format(new Frame(org.atmosphere.stomp.protocol.Action.ERROR, headers, "Supported protocol versions are " + VERSIONS)));
+                r.write(org.atmosphere.stomp.protocol.Action.ERROR, headers, "Supported protocol versions are " + VERSIONS);
 
                 return Action.CANCELLED;
             } else {
@@ -155,14 +154,14 @@ public class ConnectInterceptor extends HeartbeatInterceptor implements StompInt
                 }
 
                 desiredHeartbeat.set(serverInterval);
-                final Action retval = inspect(r);
+                final Action retval = inspect(r.getResource());
 
                 headers.put(Header.VERSION, String.valueOf(version));
-                headers.put(Header.SESSION, r.uuid());
+                headers.put(Header.SESSION, r.getResource().uuid());
                 headers.put(Header.SERVER, SERVER);
                 headers.put(Header.HEART_BEAT, TimeUnit.MILLISECONDS.convert(serverInterval, TimeUnit.SECONDS) + "," + intervals[0]);
 
-                r.write(stompFormat.format(new Frame(org.atmosphere.stomp.protocol.Action.CONNECTED, headers)));
+                r.write(org.atmosphere.stomp.protocol.Action.CONNECTED, headers);
 
                 return retval;
             }

@@ -144,6 +144,88 @@ public class FrameInterceptor extends AtmosphereInterceptorAdapter implements St
     }
 
     /**
+     * <p>
+     * Inner class that wraps the {@link AtmosphereResource} during inspection to write frame and check the nature of
+     * the operations.
+     * </p>
+     *
+     * @author Guillaume DROUET
+     * @since 0.3
+     * @version 1.0
+     *
+     */
+    public class StompAtmosphereResource {
+
+        /**
+         * The wrapped resource.
+         */
+        private final AtmosphereResource resource;
+
+        /**
+         * The action that triggers the inspection.
+         */
+        private final org.atmosphere.stomp.protocol.Action action;
+
+        /**
+         * If an error frame has been written.
+         */
+        private boolean hasError;
+
+        /**
+         * <p>
+         * Builds a new action.
+         * </p>
+         *
+         * @param r the resource
+         * @param a the action
+         */
+        public StompAtmosphereResource(final AtmosphereResource r, final org.atmosphere.stomp.protocol.Action a) {
+            resource = r;
+            action = a;
+        }
+
+        /**
+         * <p>
+         * Write a frame with its headers.
+         * </p>
+         *
+         * @param a the action
+         * @param headers the headers
+         */
+        public void write(org.atmosphere.stomp.protocol.Action a, final Map<String, String> headers) {
+            write(a, headers, null);
+        }
+
+        /**
+         * <p>
+         * Write a frame with its headers and a content.
+         * </p>
+         *
+         * @param a the action
+         * @param headers the headers
+         * @param message the message
+         */
+        public void write(org.atmosphere.stomp.protocol.Action a, final Map<String, String> headers, final String message) {
+            resource.write(stompFormat.format(new Frame(a, headers, message)));
+
+            if (!hasError) {
+                hasError = org.atmosphere.stomp.protocol.Action.ERROR.equals(a);
+            }
+        }
+
+        /**
+         * <p>
+         * Gets the wrapped resource.
+         * </p>
+         *
+         * @return the resource
+         */
+        public AtmosphereResource getResource() {
+            return resource;
+        }
+    }
+
+    /**
      * The attribute name this interceptor uses to inject a parsed body in the request when it is extracted from the frame.
      */
     public static final String STOMP_MESSAGE_BODY = "org.atmosphere.stomp.body";
@@ -218,9 +300,12 @@ public class FrameInterceptor extends AtmosphereInterceptorAdapter implements St
                 return Action.CONTINUE;
             } else if (Arrays.equals(body.getBytes(), ConnectInterceptor.STOMP_HEARTBEAT_DATA)) {
                 // Particular case: the heartbeat is handled by the ConnectInterceptor
-                return inspect(stompFormat, framework, new Frame(org.atmosphere.stomp.protocol.Action.NULL, new HashMap<String, String>()), r);
+                final org.atmosphere.stomp.protocol.Action a = org.atmosphere.stomp.protocol.Action.NULL;
+                return inspect(framework, new Frame(a, new HashMap<String, String>()), new StompAtmosphereResource(r, a));
             } else {
-                return inspect(stompFormat, framework, stompFormat.parse(body.substring(0, body.length() - 1)), r);
+                final Frame frame = stompFormat.parse(body.substring(0, body.length() - 1));
+                final StompAtmosphereResource sar = new StompAtmosphereResource(r, frame.getAction());
+                return inspect(framework, frame, sar);
             }
         } catch (final IOException ioe) {
             logger.error("STOMP interceptor fails", ioe);
@@ -252,7 +337,7 @@ public class FrameInterceptor extends AtmosphereInterceptorAdapter implements St
      * {@inheritDoc}
      */
     @Override
-    public Action inspect(final StompFormat stompFormat, final AtmosphereFramework framework, final Frame frame, final AtmosphereResource r)
+    public Action inspect(final AtmosphereFramework framework, final Frame frame, final StompAtmosphereResource r)
             throws IOException {
         final StompInterceptor interceptor = interceptors.get(frame.getAction());
 
@@ -261,7 +346,7 @@ public class FrameInterceptor extends AtmosphereInterceptorAdapter implements St
             return Action.CANCELLED;
         }
 
-        return interceptor.inspect(stompFormat, framework, frame, r);
+        return interceptor.inspect(framework, frame, r);
     }
 
     /**
