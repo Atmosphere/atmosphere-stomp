@@ -30,6 +30,7 @@ import org.atmosphere.stomp.StompBroadcastFilter;
 import org.atmosphere.stomp.StompInterceptor;
 import org.atmosphere.stomp.Subscriptions;
 import org.atmosphere.stomp.protocol.Frame;
+import org.atmosphere.stomp.protocol.Header;
 import org.atmosphere.stomp.protocol.ParseException;
 import org.atmosphere.stomp.protocol.StompFormat;
 import org.atmosphere.stomp.protocol.StompFormatImpl;
@@ -162,9 +163,9 @@ public class FrameInterceptor extends AtmosphereInterceptorAdapter implements St
         private final AtmosphereResource resource;
 
         /**
-         * The action that triggers the inspection.
+         * The frame that triggers the inspection.
          */
-        private final org.atmosphere.stomp.protocol.Action action;
+        private final Frame frame;
 
         /**
          * If an error frame has been written.
@@ -177,11 +178,11 @@ public class FrameInterceptor extends AtmosphereInterceptorAdapter implements St
          * </p>
          *
          * @param r the resource
-         * @param a the action
+         * @param f the frame
          */
-        public StompAtmosphereResource(final AtmosphereResource r, final org.atmosphere.stomp.protocol.Action a) {
+        public StompAtmosphereResource(final AtmosphereResource r, final Frame f) {
             resource = r;
-            action = a;
+            frame = f;
         }
 
         /**
@@ -205,11 +206,30 @@ public class FrameInterceptor extends AtmosphereInterceptorAdapter implements St
          * @param headers the headers
          * @param message the message
          */
-        public void write(org.atmosphere.stomp.protocol.Action a, final Map<String, String> headers, final String message) {
+        public void write(final org.atmosphere.stomp.protocol.Action a, final Map<String, String> headers, final String message) {
             resource.write(stompFormat.format(new Frame(a, headers, message)));
 
             if (!hasError) {
                 hasError = org.atmosphere.stomp.protocol.Action.ERROR.equals(a);
+            }
+        }
+
+        /**
+         * <p>
+         * Sends a receipt if the headers indicate that the client expect a response from the server when the message
+         * has been consumed successfully. Not receipt will be sent if an error has occurred during inspection and in
+         * case of connection step.
+         * </p>
+         */
+        private void receipt() {
+            if (!hasError && !org.atmosphere.stomp.protocol.Action.CONNECT.equals(frame.getAction())) {
+                final String receiptId = frame.getHeaders().get(Header.RECEIPT_ID);
+
+                if (receiptId != null) {
+                    final Map<String, String> headers = new HashMap<String, String>();
+                    headers.put(Header.RECEIPT_ID, frame.getHeaders().get(Header.RECEIPT_ID));
+                    write(org.atmosphere.stomp.protocol.Action.RECEIPT, headers);
+                }
             }
         }
 
@@ -300,12 +320,17 @@ public class FrameInterceptor extends AtmosphereInterceptorAdapter implements St
                 return Action.CONTINUE;
             } else if (Arrays.equals(body.getBytes(), ConnectInterceptor.STOMP_HEARTBEAT_DATA)) {
                 // Particular case: the heartbeat is handled by the ConnectInterceptor
-                final org.atmosphere.stomp.protocol.Action a = org.atmosphere.stomp.protocol.Action.NULL;
-                return inspect(framework, new Frame(a, new HashMap<String, String>()), new StompAtmosphereResource(r, a));
+                final Frame f = new Frame(org.atmosphere.stomp.protocol.Action.NULL, new HashMap<String, String>());
+                return inspect(framework, f, new StompAtmosphereResource(r, f));
             } else {
                 final Frame frame = stompFormat.parse(body.substring(0, body.length() - 1));
-                final StompAtmosphereResource sar = new StompAtmosphereResource(r, frame.getAction());
-                return inspect(framework, frame, sar);
+                final StompAtmosphereResource sar = new StompAtmosphereResource(r, frame);
+
+                try {
+                    return inspect(framework, frame, sar);
+                } finally {
+                    sar.receipt();
+                }
             }
         } catch (final IOException ioe) {
             logger.error("STOMP interceptor fails", ioe);

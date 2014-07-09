@@ -69,6 +69,11 @@ public class StompTest {
     protected final AtomicBoolean disconnect = new AtomicBoolean(false);
 
     /**
+     * Ask for receipt.
+     */
+    protected boolean receipt = false;
+
+    /**
      * <p>
      * Initializes framework.
      * </p>
@@ -138,6 +143,7 @@ public class StompTest {
                 + "destination:"
                 + destination
                 + "\n"
+                + (receipt ? "receipt-id:4000\n" : "\n")
                 + "id:"
                 + 1
                 + "\n"

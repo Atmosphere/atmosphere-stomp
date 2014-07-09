@@ -138,4 +138,24 @@ public class StompInterceptorTest extends StompTest {
         // Check
         Assert.assertTrue(disconnect.get());
     }
+
+    /**
+     * <p>
+     * Tests when client expect receipt.
+     * </p>
+     *
+     * @throws Exception if test fails
+     */
+    @Test
+    public void receiptTest() throws Exception {
+        final AtmosphereResponse response = newResponse();
+        final String destination = StompBusinessService.DESTINATION_HELLO_WORLD2;
+
+        // Send disconnect
+        action = Action.SEND;
+        receipt = true;
+        runMessage("(.*)?RECEIPT.*", destination,  newRequest(destination), response, false, true);
+        receipt = false;
+        runMessage("null", destination,  newRequest(destination), response, false, true);
+    }
 }

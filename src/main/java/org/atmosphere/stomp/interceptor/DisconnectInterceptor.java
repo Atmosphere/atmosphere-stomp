@@ -22,11 +22,8 @@ import org.atmosphere.cpr.AtmosphereFramework;
 import org.atmosphere.cpr.AtmosphereInterceptorAdapter;
 import org.atmosphere.stomp.StompInterceptor;
 import org.atmosphere.stomp.protocol.Frame;
-import org.atmosphere.stomp.protocol.Header;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * <p>
@@ -47,14 +44,6 @@ public class DisconnectInterceptor extends AtmosphereInterceptorAdapter implemen
                           final Frame frame,
                           final FrameInterceptor.StompAtmosphereResource r)
             throws IOException {
-        final Map<String, String> headers = new HashMap<String, String>();
-        final String receiptId = frame.getHeaders().get(Header.RECEIPT_ID);
-
-        if (receiptId != null) {
-            headers.put(Header.RECEIPT_ID, frame.getHeaders().get(Header.RECEIPT_ID));
-        }
-
-        r.write(org.atmosphere.stomp.protocol.Action.RECEIPT, headers);
         return Action.CONTINUE;
     }
 }
