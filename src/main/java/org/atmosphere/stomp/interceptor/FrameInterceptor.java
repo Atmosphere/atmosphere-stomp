@@ -25,7 +25,6 @@ import org.atmosphere.cpr.AtmosphereInterceptorAdapter;
 import org.atmosphere.cpr.AtmosphereResource;
 import org.atmosphere.cpr.AtmosphereResourceSessionFactory;
 import org.atmosphere.cpr.BroadcastFilterLifecycle;
-import org.atmosphere.cpr.BroadcasterFactory;
 import org.atmosphere.handler.AbstractReflectorAtmosphereHandler;
 import org.atmosphere.stomp.StompBroadcastFilter;
 import org.atmosphere.stomp.StompInterceptor;
@@ -244,7 +243,7 @@ public class FrameInterceptor extends AtmosphereInterceptorAdapter implements St
             final Set<String> destinations = s.getAllDestinations();
 
             for (final String d : destinations) {
-                BroadcasterFactory.getDefault().lookup(d).addAtmosphereResource(atmosphereResource);
+                framework.getAtmosphereConfig().getBroadcasterFactory().lookup(d).addAtmosphereResource(atmosphereResource);
             }
         }
     }
