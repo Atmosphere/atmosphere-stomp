@@ -142,8 +142,7 @@ public class StompTest {
                 + "\n"
                 + "destination:"
                 + destination
-                + "\n"
-                + (receipt ? "receipt-id:4000\n" : "\n")
+                + (receipt ? "\nreceipt-id:4000\n" : "\n")
                 + "id:"
                 + 1
                 + "\n"
