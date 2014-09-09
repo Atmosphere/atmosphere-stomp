@@ -21,7 +21,6 @@ import org.atmosphere.HeartbeatAtmosphereResourceEvent;
 import org.atmosphere.cpr.Action;
 import org.atmosphere.cpr.AtmosphereConfig;
 import org.atmosphere.cpr.AtmosphereFramework;
-import org.atmosphere.cpr.AtmosphereResource;
 import org.atmosphere.cpr.AtmosphereResourceEvent;
 import org.atmosphere.cpr.AtmosphereResourceEventListenerAdapter;
 import org.atmosphere.cpr.AtmosphereResourceImpl;
@@ -97,7 +96,7 @@ public class ConnectInterceptor extends HeartbeatInterceptor implements StompInt
      * {@inheritDoc}
      */
     @Override
-    protected int extractHeartbeatInterval(final AtmosphereResource resource) {
+    protected int extractHeartbeatInterval(final AtmosphereResourceImpl resource) {
         return desiredHeartbeat.get();
     }
 
