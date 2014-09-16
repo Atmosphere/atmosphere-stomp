@@ -17,13 +17,13 @@
 
 package org.atmosphere.stomp.interceptor;
 
-import org.atmosphere.HeartbeatAtmosphereResourceEvent;
 import org.atmosphere.cpr.Action;
 import org.atmosphere.cpr.AtmosphereConfig;
 import org.atmosphere.cpr.AtmosphereFramework;
 import org.atmosphere.cpr.AtmosphereResourceEvent;
 import org.atmosphere.cpr.AtmosphereResourceEventListenerAdapter;
 import org.atmosphere.cpr.AtmosphereResourceImpl;
+import org.atmosphere.cpr.HeartbeatAtmosphereResourceEvent;
 import org.atmosphere.cpr.packages.StompEndpointProcessor;
 import org.atmosphere.interceptor.HeartbeatInterceptor;
 import org.atmosphere.stomp.StompInterceptor;
@@ -39,7 +39,7 @@ import java.util.concurrent.TimeUnit;
  * <p>
  * Evaluates the {@link org.atmosphere.stomp.protocol.Action#CONNECT connection} frame.
  * </p>
- *
+ * <p/>
  * <p>
  * Key features are the heartbeat negotiation and the user authentication when associated headers are specified in the
  * frame.
@@ -54,7 +54,7 @@ public class ConnectInterceptor extends HeartbeatInterceptor implements StompInt
     /**
      * The padding data for STOMP heartbeat.
      */
-    public static final byte[] STOMP_HEARTBEAT_DATA = new byte[] { 0x0A, };
+    public static final byte[] STOMP_HEARTBEAT_DATA = new byte[]{0x0A,};
 
     /**
      * The default supported version.
@@ -206,7 +206,7 @@ public class ConnectInterceptor extends HeartbeatInterceptor implements StompInt
      * heartbeat interval in milliseconds the sender of the header can assume. The second one is what he wants to
      * receive.
      * </p>
-     *
+     * <p/>
      * <p>
      * If the value is {@code null} then 0 will be returned for each direction do disable heartbeat.
      * </p>
@@ -216,10 +216,10 @@ public class ConnectInterceptor extends HeartbeatInterceptor implements StompInt
      */
     private Integer[] parseHeartBeat(final String heartbeat) {
         if (heartbeat == null) {
-            return new Integer[] { 0, 0, };
+            return new Integer[]{0, 0,};
         } else {
             final String[] arr = heartbeat.split(",");
-            return new Integer[] { Integer.parseInt(arr[0]), Integer.parseInt(arr[1]), };
+            return new Integer[]{Integer.parseInt(arr[0]), Integer.parseInt(arr[1]),};
         }
     }
 }
