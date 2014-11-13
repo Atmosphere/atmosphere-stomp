@@ -271,7 +271,7 @@ public class StompTest {
      */
     void addToBroadcaster(final String destination, final AtmosphereResource ar) {
         final Broadcaster b = framework.getBroadcasterFactory().lookup(destination);
-        Subscriptions.getFromSession(AtmosphereResourceSessionFactory.getDefault().getSession(ar)).addSubscription("1", destination);
+        Subscriptions.getFromSession(ar.getAtmosphereConfig().sessionFactory().getSession(ar)).addSubscription("1", destination);
         b.addAtmosphereResource(ar);
     }
 
@@ -356,7 +356,7 @@ public class StompTest {
         assertTrue(Pattern.compile(regex, Pattern.DOTALL).matcher(broadcast.toString()).matches(), broadcast.toString());
 
         if (addToBroadcaster) {
-            Subscriptions.getFromSession(AtmosphereResourceSessionFactory.getDefault().getSession(ar)).removeSubscription("1");
+            Subscriptions.getFromSession(ar.getAtmosphereConfig().sessionFactory().getSession(ar)).removeSubscription("1");
         }
     }
 }

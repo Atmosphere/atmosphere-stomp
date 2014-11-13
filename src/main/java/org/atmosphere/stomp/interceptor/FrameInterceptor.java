@@ -281,7 +281,7 @@ public class FrameInterceptor extends AtmosphereInterceptorAdapter implements St
     @Override
     public void configure(final AtmosphereConfig config) {
         framework = config.framework();
-        arsf = AtmosphereResourceSessionFactory.getDefault();
+        arsf = config.sessionFactory();
         setStompFormat(PropertyClass.STOMP_FORMAT_CLASS.retrieve(StompFormat.class, config));
 
         try {

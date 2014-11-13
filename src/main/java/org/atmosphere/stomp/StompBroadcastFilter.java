@@ -51,19 +51,6 @@ public class StompBroadcastFilter implements PerRequestBroadcastFilter, Broadcas
      */
     private StompFormat stompFormat;
 
-    /**
-     * The factory providing sessions with subscriptions.
-     */
-    private AtmosphereResourceSessionFactory arsf;
-
-    /**
-     * <p>
-     * Builds a new instance.
-     * </p>
-     */
-    public StompBroadcastFilter() {
-        this.arsf = AtmosphereResourceSessionFactory.getDefault();
-    }
 
     /**
      * {@inheritDoc}
@@ -74,7 +61,7 @@ public class StompBroadcastFilter implements PerRequestBroadcastFilter, Broadcas
                                   final Object originalMessage,
                                   final Object message) {
         // Get the subscriptions
-        final Subscriptions subscriptions = Subscriptions.getFromSession(arsf.getSession(atmosphereResource));
+        final Subscriptions subscriptions = Subscriptions.getFromSession(atmosphereResource.getAtmosphereConfig().sessionFactory().getSession(atmosphereResource));
         final Map<String, String> headers = new HashMap<String, String>();
         headers.put(Header.DESTINATION, broadcasterId);
 
@@ -120,6 +107,5 @@ public class StompBroadcastFilter implements PerRequestBroadcastFilter, Broadcas
     public void destroy() {
         // Let's gc do its job...
         this.stompFormat = null;
-        this.arsf = null;
     }
 }

@@ -51,11 +51,6 @@ public enum HandlerHelper {
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     /**
-     * We track subscriptions for each resource in their session.
-     */
-    private final AtmosphereResourceSessionFactory arsf;
-
-    /**
      * <p>
      * This interface defined a method with a signature like a procedure to process an handler.
      * </p>
@@ -82,15 +77,6 @@ public enum HandlerHelper {
 
     /**
      * <p>
-     * Builds a new instance.
-     * </p>
-     */
-    private HandlerHelper() {
-        arsf = AtmosphereResourceSessionFactory.getDefault();
-    }
-
-    /**
-     * <p>
      * Gets the handler associated to the mapping specified in the given {@link org.atmosphere.stomp.protocol.Header#DESTINATION header}
      * and applies a procedure on it.
      * </p>
@@ -109,7 +95,7 @@ public enum HandlerHelper {
                              final Procedure call)
             throws IOException {
         final String mapping;
-        final Subscriptions retval = Subscriptions.getFromSession(arsf.getSession(resource));
+        final Subscriptions retval = Subscriptions.getFromSession(framework.sessionFactory().getSession(resource));
 
         // We assume that only the ID header exists, so we need to check the mapping that associates the ID to the destination
         if (byId) {
