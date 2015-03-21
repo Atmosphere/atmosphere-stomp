@@ -217,7 +217,7 @@ public class FrameInterceptor extends AtmosphereInterceptorAdapter implements St
         /**
          * <p>
          * Sends a receipt if the headers indicate that the client expect a response from the server when the message
-         * has been consumed successfully. Not receipt will be sent if an error has occurred during inspection and in
+         * has been consumed successfully. No receipt will be sent if an error has occurred during inspection and in
          * case of connection step.
          * </p>
          */

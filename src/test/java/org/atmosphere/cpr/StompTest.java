@@ -105,7 +105,7 @@ public class StompTest {
 
             @Override
             public String getInitParameter(final String name) {
-                return null;
+                return ApplicationConfig.READ_GET_BODY.equals(name) ? "true" : null;
             }
 
             @Override
@@ -115,7 +115,6 @@ public class StompTest {
         });
 
         config = framework.getAtmosphereConfig();
-
         processor = new AsynchronousProcessor(config) {
             @Override
             public org.atmosphere.cpr.Action service(AtmosphereRequest req, AtmosphereResponse res) throws IOException, ServletException {
@@ -124,9 +123,6 @@ public class StompTest {
         };
 
         framework.setAsyncSupport(processor);
-
-        // Configure interceptor
-        framework.interceptor(new FrameInterceptor());
     }
 
     /**
