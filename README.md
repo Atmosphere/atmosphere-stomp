@@ -34,6 +34,11 @@ STOMP support. The following table shows the associated versions:
         <td>2.2.0-RC3</td>
         <td>2.2.2</td>
     </tr>
+    <tr>
+        <td>0.3</td>
+        <td>2.3.0-RC6</td>
+        <td>2.2.9</td>
+    </tr>
 </table>
 
 ### Demo
