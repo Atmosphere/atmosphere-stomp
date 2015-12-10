@@ -183,7 +183,7 @@ public class StompTest {
      * @return the request
      */
     AtmosphereRequest newRequest(final String destination, final String body, final Map<String, String> headers) {
-        final AtmosphereRequest req = new AtmosphereRequest.Builder()
+        final AtmosphereRequest req = new AtmosphereRequestImpl.Builder()
                 .pathInfo(destination)
                 .method("GET")
                 .body(body)
@@ -203,7 +203,7 @@ public class StompTest {
      * @return the response
      */
     AtmosphereResponse newResponse() {
-        return AtmosphereResponse.newInstance();
+        return AtmosphereResponseImpl.newInstance();
     }
 
     /**
